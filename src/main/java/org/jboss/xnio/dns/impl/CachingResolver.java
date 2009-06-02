@@ -22,12 +22,12 @@
 
 package org.jboss.xnio.dns.impl;
 
-import org.jboss.xnio.dns.Resolver;
+import org.jboss.xnio.dns.NetworkResolver;
 import org.jboss.xnio.dns.Answer;
 import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
-import org.jboss.xnio.dns.AbstractResolver;
 import org.jboss.xnio.dns.Domain;
+import org.jboss.xnio.dns.AbstractNetworkResolver;
 import static org.jboss.xnio.dns.impl.ConcurrentReferenceHashMap.DEFAULT_CONCURRENCY_LEVEL;
 import static org.jboss.xnio.dns.impl.ConcurrentReferenceHashMap.DEFAULT_INITIAL_CAPACITY;
 import static org.jboss.xnio.dns.impl.ConcurrentReferenceHashMap.DEFAULT_LOAD_FACTOR;
@@ -37,20 +37,29 @@ import java.util.Set;
 import java.util.EnumSet;
 import java.util.EnumMap;
 import java.util.concurrent.ConcurrentMap;
+import java.net.SocketAddress;
 
-public final class CachingResolver extends AbstractResolver implements Resolver {
+public final class CachingResolver extends AbstractNetworkResolver implements NetworkResolver {
 
     private final EnumMap<RRClass, ConcurrentMap<Domain, CacheEntry>> caches;
-    private final Resolver realResolver;
+    private final NetworkResolver realResolver;
     private static final CachingNotifier cachingNotifier = new CachingNotifier();
 
-    public CachingResolver(final Resolver resolver) {
+    public CachingResolver(final NetworkResolver resolver) {
         final EnumMap<RRClass, ConcurrentMap<Domain, CacheEntry>> caches = new EnumMap<RRClass, ConcurrentMap<Domain, CacheEntry>>(RRClass.class);
         for (RRClass rrClass : RRClass.values()) {
             caches.put(rrClass, new ConcurrentReferenceHashMap<Domain, CacheEntry>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL, STRONG, SOFT, EnumSet.noneOf(ConcurrentReferenceHashMap.Option.class)));
         }
         this.caches = caches;
         realResolver = resolver;
+    }
+
+    public SocketAddress getDefaultServerAddress() {
+        return realResolver.getServerAddress();
+    }
+
+    public IoFuture<Answer> resolve(final SocketAddress server, final Domain name, final RRClass rrClass, final RRType rrType, final Set<Flag> flags) {
+        return null;
     }
 
     public IoFuture<Answer> resolve(Domain name, final RRClass rrClass, final RRType rrType, final Set<Flag> flags) {

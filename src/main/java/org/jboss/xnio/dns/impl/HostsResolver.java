@@ -22,30 +22,30 @@
 
 package org.jboss.xnio.dns.impl;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.SocketAddress;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.jboss.xnio.FinishedIoFuture;
+import org.jboss.xnio.IoFuture;
 import org.jboss.xnio.dns.Answer;
+import org.jboss.xnio.dns.Domain;
 import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.Record;
-import org.jboss.xnio.dns.AbstractResolver;
-import org.jboss.xnio.dns.Domain;
-import org.jboss.xnio.dns.record.InetARecord;
+import org.jboss.xnio.dns.AbstractNetworkResolver;
 import org.jboss.xnio.dns.record.InetAAAARecord;
-import org.jboss.xnio.IoFuture;
-import org.jboss.xnio.FinishedIoFuture;
-import java.util.Set;
-import java.util.Map;
-import java.util.Collections;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.net.InetAddress;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.io.Reader;
-import java.io.BufferedReader;
-import java.io.IOException;
+import org.jboss.xnio.dns.record.InetARecord;
 
-public final class HostsResolver extends AbstractResolver {
+public final class HostsResolver extends AbstractNetworkResolver {
     private volatile Map<String, InetAddress> hostsMap = Collections.emptyMap();
 
     private void initialize(BufferedReader source) throws IOException {
@@ -72,24 +72,30 @@ public final class HostsResolver extends AbstractResolver {
         }
     }
 
-    public IoFuture<Answer> resolve(final Domain name, final RRClass rrClass, final RRType rrType, final Set<Flag> flags) {
+    protected SocketAddress getDefaultServerAddress() {
+        return null;
+    }
+
+    public IoFuture<Answer> resolve(final SocketAddress addr, final Domain name, final RRClass rrClass, final RRType rrType, final Set<Flag> flags) {
         if (rrClass == RRClass.IN) {
             if (rrType == RRType.A) {
                 final InetAddress address = hostsMap.get(name);
                 if (address instanceof Inet4Address) {
-                    return new FinishedIoFuture<Answer>(new Answer(rrClass, rrType, Arrays.<Record>asList(new InetARecord(name, Long.MAX_VALUE, (Inet4Address) address))));
+                    final Answer answer = new Answer(name, rrClass, rrType);
+                    final List<Record> records = answer.getAnswerRecords();
+                    records.add(new InetARecord(name, 0L, (Inet4Address) address));
+                    return new FinishedIoFuture<Answer>(answer);
                 }
             } else if (rrType == RRType.AAAA) {
                 final InetAddress address = hostsMap.get(name);
                 if (address instanceof Inet6Address) {
-                    return new FinishedIoFuture<Answer>(new Answer(rrClass, rrType, Arrays.<Record>asList(new InetAAAARecord(name, Long.MAX_VALUE, (Inet6Address) address))));
+                    final Answer answer = new Answer(name, rrClass, rrType);
+                    final List<Record> records = answer.getAnswerRecords();
+                    records.add(new InetAAAARecord(name, 0L, (Inet6Address) address));
+                    return new FinishedIoFuture<Answer>(answer);
                 }
             }
         }
-        return new FinishedIoFuture<Answer>(new Answer(rrClass, rrType, Collections.<Record>emptyList()));
-    }
-
-    public IoFuture<List<String>> resolveText(final String name) {
-        return null;
+        return new FinishedIoFuture<Answer>(new Answer(name, rrClass, rrType));
     }
 }

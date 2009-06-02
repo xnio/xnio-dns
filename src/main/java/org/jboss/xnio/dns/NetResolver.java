@@ -42,7 +42,7 @@ import java.net.SocketAddress;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class NetResolver extends AbstractResolver {
+public class NetResolver extends AbstractNetworkResolver {
 
     private final ScheduledExecutorService scheduledExecutorService;
 
@@ -150,7 +150,7 @@ public class NetResolver extends AbstractResolver {
         remove(SERVERS_UPDATER, address);
     }
 
-    protected SocketAddress getServerAddress() {
+    protected SocketAddress getDefaultServerAddress() {
         final SocketAddress[] servers = this.servers;
         if (servers == null) {
             throw new IllegalStateException("No servers defined for this resolver!");

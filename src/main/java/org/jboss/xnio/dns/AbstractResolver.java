@@ -22,34 +22,24 @@
 
 package org.jboss.xnio.dns;
 
-import org.jboss.xnio.IoFuture;
-import org.jboss.xnio.AbstractConvertingIoFuture;
-import org.jboss.xnio.dns.record.InetARecord;
-import org.jboss.xnio.dns.record.InetAAAARecord;
-import org.jboss.xnio.dns.record.PtrRecord;
-import org.jboss.xnio.dns.record.TxtRecord;
-import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.Collections;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.io.IOException;
+import org.jboss.xnio.AbstractConvertingIoFuture;
+import org.jboss.xnio.IoFuture;
+import org.jboss.xnio.dns.record.TxtRecord;
+import org.jboss.xnio.dns.record.PtrRecord;
+import org.jboss.xnio.dns.record.InetARecord;
+import org.jboss.xnio.dns.record.InetAAAARecord;
 
 public abstract class AbstractResolver implements Resolver {
 
-    public IoFuture<Answer> resolve(final InetAddress server, final Domain name, final RRClass rrClass, final RRType rrType, final Set<Flag> flags) {
-        return resolve(new InetSocketAddress(server, 53), name, rrClass, rrType, flags);
-    }
-
-    protected abstract SocketAddress getServerAddress();
-
-    public IoFuture<Answer> resolve(final Domain name, final RRClass rrClass, final RRType rrType, final Set<Flag> flags) {
-        return resolve(getServerAddress(), name, rrClass, rrType, flags);
-    }
+    public abstract IoFuture<Answer> resolve(Domain name, RRClass rrClass, RRType rrType, Set<Flag> flags);
 
     public IoFuture<Answer> resolve(final Domain name, final RRClass rrClass, final RRType rrType) {
         return resolve(name, rrClass, rrType, Collections.<Flag>emptySet());
@@ -267,5 +257,4 @@ public abstract class AbstractResolver implements Resolver {
             return null;
         }
     }
-
 }

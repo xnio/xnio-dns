@@ -28,15 +28,11 @@ import java.util.List;
 import java.net.InetAddress;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
-import java.net.SocketAddress;
 
 /**
  *
  */
 public interface Resolver {
-    IoFuture<Answer> resolve(InetAddress server, Domain name, RRClass rrClass, RRType rrType, Set<Flag> flags);
-
-    IoFuture<Answer> resolve(SocketAddress server, Domain name, RRClass rrClass, RRType rrType, Set<Flag> flags);
 
     IoFuture<Answer> resolve(Domain name, RRClass rrClass, RRType rrType, Set<Flag> flags);
 

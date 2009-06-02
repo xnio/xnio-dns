@@ -29,7 +29,6 @@
 
     <properties>
         <xnio-dns.version>1.0.0-SNAPSHOT</xnio-dns.version>
-        <xnio.version>1.3.0-SNAPSHOT</xnio.version>
     </properties>
 
     <groupId>org.jboss.xnio</groupId>
@@ -40,7 +39,7 @@
         <dependency>
             <groupId>org.jboss.xnio</groupId>
             <artifactId>xnio-api</artifactId>
-            <version>${xnio.version}</version>
+            <version>1.3.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <build>
