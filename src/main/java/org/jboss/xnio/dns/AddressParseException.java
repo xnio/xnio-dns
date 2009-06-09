@@ -23,9 +23,9 @@
 package org.jboss.xnio.dns;
 
 /**
- * A domain parse exception.  Thrown when a domain name contains invalid characters.
+ * An address parse exception.  Thrown when a network address contains invalid characters or is improperly formatted.
  */
-public final class DomainParseException extends IllegalArgumentException {
+public final class AddressParseException extends IllegalArgumentException {
 
     private static final long serialVersionUID = -8829167161458971075L;
 
@@ -33,7 +33,7 @@ public final class DomainParseException extends IllegalArgumentException {
      * Constructs a <tt>DomainParseException</tt> with no detail message. The cause is not initialized, and may subsequently
      * be initialized by a call to {@link #initCause(Throwable) initCause}.
      */
-    public DomainParseException() {
+    public AddressParseException() {
     }
 
     /**
@@ -42,7 +42,7 @@ public final class DomainParseException extends IllegalArgumentException {
      *
      * @param msg the detail message
      */
-    public DomainParseException(String msg) {
+    public AddressParseException(String msg) {
         super(msg);
     }
 
@@ -54,7 +54,7 @@ public final class DomainParseException extends IllegalArgumentException {
      *
      * @param cause the cause (which is saved for later retrieval by the {@link #getCause()} method)
      */
-    public DomainParseException(Throwable cause) {
+    public AddressParseException(Throwable cause) {
         super(cause);
     }
 
@@ -64,7 +64,7 @@ public final class DomainParseException extends IllegalArgumentException {
      * @param msg the detail message
      * @param cause the cause (which is saved for later retrieval by the {@link #getCause()} method)
      */
-    public DomainParseException(String msg, Throwable cause) {
+    public AddressParseException(String msg, Throwable cause) {
         super(msg, cause);
     }
 
@@ -74,7 +74,7 @@ public final class DomainParseException extends IllegalArgumentException {
      * @param msg the detail message
      * @param position the character position, starting at 0
      */
-    public DomainParseException(String msg, int position) {
+    public AddressParseException(String msg, int position) {
         super(msg);
         setPosition(position);
     }

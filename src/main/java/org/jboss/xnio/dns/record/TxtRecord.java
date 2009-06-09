@@ -26,20 +26,39 @@ import org.jboss.xnio.dns.Record;
 import org.jboss.xnio.dns.Domain;
 import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
+import org.jboss.xnio.dns.TTLSpec;
 
+/**
+ * A record of type {@link RRType#TXT}.
+ */
 public class TxtRecord extends Record {
+
+    private static final long serialVersionUID = 8852841335529670195L;
 
     private final String text;
 
-    protected TxtRecord(final Domain name, final long eol, final String text) {
-        super(name, RRClass.IN, RRType.TXT, eol);
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param ttlSpec the TTl spec
+     * @param text the text data
+     */
+    public TxtRecord(final Domain name, final TTLSpec ttlSpec, final String text) {
+        super(name, RRClass.IN, RRType.TXT, ttlSpec);
         this.text = text;
     }
 
+    /**
+     * Get the text data.
+     *
+     * @return the text data
+     */
     public String getText() {
         return text;
     }
 
+    /** {@inheritDoc} */
     protected void appendRData(final StringBuilder builder) {
         builder.append(' ').append('"').append(text.replace("\\", "\\\\").replace("\"", "\\\"")).append('"');
     }

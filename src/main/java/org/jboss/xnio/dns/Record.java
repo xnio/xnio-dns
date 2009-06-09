@@ -22,60 +22,86 @@
 
 package org.jboss.xnio.dns;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+import java.io.Serializable;
 
-public abstract class Record {
+/**
+ * A resource record.
+ */
+public abstract class Record implements Serializable {
+
+    private static final long serialVersionUID = 132819048908309214L;
 
     private final Domain name;
     private final RRClass rrClass;
     private final RRType rrType;
-    private final long eol;
+    private final TTLSpec ttlSpec;
 
-    protected Record(final Domain name, final RRClass rrClass, final RRType rrType, final long eol) {
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrClass the record class
+     * @param rrType the record type
+     * @param ttlSpec the TTL of this record
+     */
+    protected Record(final Domain name, final RRClass rrClass, final RRType rrType, final TTLSpec ttlSpec) {
         this.name = name;
         this.rrType = rrType;
         this.rrClass = rrClass;
-        this.eol = eol;
+        this.ttlSpec = ttlSpec;
     }
 
+    /**
+     * Get the domain name for this record.
+     *
+     * @return the domain name
+     */
     public Domain getName() {
         return name;
     }
 
+    /**
+     * Get the class of this record.
+     *
+     * @return the resource record class
+     */
     public RRClass getRrClass() {
         return rrClass;
     }
 
+    /**
+     * Get the type of this record.
+     *
+     * @return the resource record type
+     */
     public RRType getRrType() {
         return rrType;
     }
 
     /**
-     * Get the EOL as a timestamp with millisecond resolution.  This is equal to the TTL plus the time at which the
-     * request was received.
-     *
-     * @return the EOL
-     */
-    public long getEol() {
-        return eol;
-    }
-
-    /**
-     * Get the remaining TTL of this record in seconds.  The result will be between zero and {@code Integer.MAX_VALUE},
-     * inclusive.
+     * Get the TTL of this record.
      *
      * @return the TTL
      */
-    public int getTtl() {
-        return (int) min((long) Integer.MAX_VALUE, max(0L, (eol - System.currentTimeMillis()) / 1000L));
+    public TTLSpec getTtlSpec() {
+        return ttlSpec;
     }
 
-    protected abstract void appendRData(StringBuilder builder);
+    /**
+     * Append any record-specific RR data to the string builder.
+     *
+     * @param builder the builder
+     */
+    protected void appendRData(StringBuilder builder) {}
 
+    /**
+     * Get the string representation of this record.
+     *
+     * @return the string representation
+     */
     public String toString() {
         final StringBuilder builder = new StringBuilder();
-        builder.append(name).append(' ').append(getTtl()).append(' ').append(rrClass).append(' ').append(rrType);
+        builder.append(name).append(' ').append(getTtlSpec().getTtl()).append(' ').append(rrClass).append(' ').append(rrType);
         appendRData(builder);
         return builder.toString();
     }

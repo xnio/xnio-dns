@@ -20,20 +20,22 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.xnio.dns.impl;
+package org.jboss.xnio.dns;
 
-import org.jboss.xnio.dns.Record;
-import org.jboss.xnio.dns.RRType;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentHashMap;
-
-public final class LeafEntry extends CacheEntry {
-    private final ConcurrentMap<RRType, Record> records = new ConcurrentHashMap<RRType, Record>();
-
-    public Record getRecord(RRType rrType) {
-        final ConcurrentMap<RRType, Record> records = this.records;
-        return records.get(rrType);
-    }
-
-    
+/**
+ * Flags which control how a query is executed.
+ */
+public enum ResolverFlag {
+    /**
+     * Bypass the cache (if any).
+     */
+    BYPASS_CACHE,
+    /**
+     * Bypass recursion.
+     */
+    NO_RECURSION,
+    /**
+     * Use TCP.
+     */
+    USE_TCP,
 }

@@ -37,18 +37,25 @@ import org.jboss.xnio.dns.record.PtrRecord;
 import org.jboss.xnio.dns.record.InetARecord;
 import org.jboss.xnio.dns.record.InetAAAARecord;
 
+/**
+ * An abstract convenience base class for resolvers which implements the majority of the resolver methods.
+ */
 public abstract class AbstractResolver implements Resolver {
 
-    public abstract IoFuture<Answer> resolve(Domain name, RRClass rrClass, RRType rrType, Set<Flag> flags);
+    /** {@inheritDoc} */
+    public abstract IoFuture<Answer> resolve(Domain name, RRClass rrClass, RRType rrType, Set<ResolverFlag> flags);
 
+    /** {@inheritDoc} */
     public IoFuture<Answer> resolve(final Domain name, final RRClass rrClass, final RRType rrType) {
-        return resolve(name, rrClass, rrType, Collections.<Flag>emptySet());
+        return resolve(name, rrClass, rrType, Collections.<ResolverFlag>emptySet());
     }
 
+    /** {@inheritDoc} */
     public IoFuture<Answer> resolve(final Domain name, final RRType rrType) {
         return resolve(name, RRClass.IN, rrType);
     }
 
+    /** {@inheritDoc} */
     public IoFuture<List<InetAddress>> resolveAllInet(final Domain name) {
         if (name == null) {
             throw new NullPointerException("name is null");
@@ -56,6 +63,7 @@ public abstract class AbstractResolver implements Resolver {
         return new FutureInetAddressList(resolve(name, RRClass.IN, RRType.ANY));
     }
 
+    /** {@inheritDoc} */
     public IoFuture<InetAddress> resolveInet(final Domain name) {
         if (name == null) {
             throw new NullPointerException("name is null");
@@ -63,6 +71,7 @@ public abstract class AbstractResolver implements Resolver {
         return new FutureInetAddress(resolve(name, RRClass.IN, RRType.ANY));
     }
 
+    /** {@inheritDoc} */
     public IoFuture<List<Inet4Address>> resolveAllInet4(final Domain name) {
         if (name == null) {
             throw new NullPointerException("name is null");
@@ -70,6 +79,7 @@ public abstract class AbstractResolver implements Resolver {
         return new FutureInet4AddressList(resolve(name, RRClass.IN, RRType.A));
     }
 
+    /** {@inheritDoc} */
     public IoFuture<Inet4Address> resolveInet4(final Domain name) {
         if (name == null) {
             throw new NullPointerException("name is null");
@@ -77,6 +87,7 @@ public abstract class AbstractResolver implements Resolver {
         return new FutureInet4Address(resolve(name, RRClass.IN, RRType.A));
     }
 
+    /** {@inheritDoc} */
     public IoFuture<List<Inet6Address>> resolveAllInet6(final Domain name) {
         if (name == null) {
             throw new NullPointerException("name is null");
@@ -84,6 +95,7 @@ public abstract class AbstractResolver implements Resolver {
         return new FutureInet6AddressList(resolve(name, RRClass.IN, RRType.AAAA));
     }
 
+    /** {@inheritDoc} */
     public IoFuture<Inet6Address> resolveInet6(final Domain name) {
         if (name == null) {
             throw new NullPointerException("name is null");
@@ -91,6 +103,7 @@ public abstract class AbstractResolver implements Resolver {
         return new FutureInet6Address(resolve(name, RRClass.IN, RRType.AAAA));
     }
 
+    /** {@inheritDoc} */
     public IoFuture<Domain> resolveReverse(final InetAddress address) {
         if (address == null) {
             throw new NullPointerException("address is null");
@@ -98,6 +111,7 @@ public abstract class AbstractResolver implements Resolver {
         return new FuturePtrDomain(resolve(Domain.reverseArpa(address), RRClass.IN, RRType.PTR));
     }
 
+    /** {@inheritDoc} */
     public IoFuture<List<String>> resolveText(final Domain name) {
         if (name == null) {
             throw new NullPointerException("name is null");

@@ -29,6 +29,20 @@ import java.io.IOException;
 
 class FutureAnswer extends AbstractIoFuture<Answer> implements IoFuture<Answer> {
 
+    static final Notifier<Answer, FutureAnswer> FUTURE_ANSWER_NOTIFIER = new HandlingNotifier<Answer, FutureAnswer>() {
+        public void handleCancelled(final FutureAnswer attachment) {
+            attachment.finishCancel();
+        }
+
+        public void handleFailed(final IOException exception, final FutureAnswer attachment) {
+            attachment.setException(exception);
+        }
+
+        public void handleDone(final Answer result, final FutureAnswer attachment) {
+            attachment.setResult(result);
+        }
+    };
+
     protected boolean setException(final IOException exception) {
         return super.setException(exception);
     }

@@ -26,35 +26,76 @@ import org.jboss.xnio.dns.Record;
 import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.Domain;
+import org.jboss.xnio.dns.TTLSpec;
 
+/**
+ * A record of type {@link RRType#MX}.
+ */
 public class MxRecord extends Record {
 
+    private static final long serialVersionUID = -8404288502462059611L;
+
     private final int preference;
-    private final Domain exchange;
+    private final Domain exchanger;
 
-    public MxRecord(final Domain name, final RRClass rrclass, final long eol, final int preference, final Domain exchange) {
-        super(name, rrclass, RRType.MX, eol);
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrclass the record class
+     * @param ttlSpec the TTL spec
+     * @param preference the exchanger preference value
+     * @param exchanger the exchanger domain
+     */
+    public MxRecord(final Domain name, final RRClass rrclass, final TTLSpec ttlSpec, final int preference, final Domain exchanger) {
+        super(name, rrclass, RRType.MX, ttlSpec);
         this.preference = preference;
-        this.exchange = exchange;
+        this.exchanger = exchanger;
     }
 
-    public MxRecord(final Domain name, final long eol, final int preference, final Domain exchange) {
-        this(name, RRClass.IN, eol, preference, exchange);
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param ttlSpec the TTL spec
+     * @param preference the exchanger preference value
+     * @param exchanger the exchanger domain
+     */
+    public MxRecord(final Domain name, final TTLSpec ttlSpec, final int preference, final Domain exchanger) {
+        this(name, RRClass.IN, ttlSpec, preference, exchanger);
     }
 
-    public MxRecord(final Domain name, final int preference, final Domain exchange) {
-        this(name, 0L, preference, exchange);
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param preference the exchanger preference value
+     * @param exchanger the exchanger domain
+     */
+    public MxRecord(final Domain name, final int preference, final Domain exchanger) {
+        this(name, TTLSpec.ZERO, preference, exchanger);
     }
 
+    /** {@inheritDoc} */
     protected void appendRData(final StringBuilder builder) {
-        builder.append(' ').append(preference).append(' ').append(exchange);
+        builder.append(' ').append(preference).append(' ').append(exchanger);
     }
 
+    /**
+     * Get the preference value.
+     *
+     * @return the preference value
+     */
     public int getPreference() {
         return preference;
     }
 
-    public Domain getExchange() {
-        return exchange;
+    /**
+     * Get the exchanger name.
+     *
+     * @return the exchanger name
+     */
+    public Domain getExchanger() {
+        return exchanger;
     }
 }

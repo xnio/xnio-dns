@@ -27,19 +27,38 @@ import org.jboss.xnio.dns.Record;
 import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.Domain;
+import org.jboss.xnio.dns.TTLSpec;
 
+/**
+ * A record of type {@link RRType#AAAA}.
+ */
 public class InetAAAARecord extends Record {
+    private static final long serialVersionUID = -8702941004736168982L;
+
     private final Inet6Address address;
 
-    public InetAAAARecord(final Domain name, final long eol, final Inet6Address address) {
-        super(name, RRClass.IN, RRType.A, eol);
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param ttlSpec the TTL spec
+     * @param address the IPv6 address
+     */
+    public InetAAAARecord(final Domain name, final TTLSpec ttlSpec, final Inet6Address address) {
+        super(name, RRClass.IN, RRType.A, ttlSpec);
         this.address = address;
     }
 
+    /**
+     * Get the IP address.
+     *
+     * @return the IP address
+     */
     public Inet6Address getAddress() {
         return address;
     }
 
+    /** {@inheritDoc} */
     protected void appendRData(final StringBuilder builder) {
         builder.append(' ').append(address.getHostAddress());
     }

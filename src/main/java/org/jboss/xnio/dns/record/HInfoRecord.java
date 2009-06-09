@@ -26,33 +26,75 @@ import org.jboss.xnio.dns.Record;
 import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.Domain;
+import org.jboss.xnio.dns.TTLSpec;
 
+/**
+ * A record of type {@link RRType#HINFO}.
+ */
 public class HInfoRecord extends Record {
+
+    private static final long serialVersionUID = 8123650143005076515L;
+
     private final String cpu;
     private final String os;
 
-    public HInfoRecord(final Domain name, final RRClass rrclass, final long eol, final String cpu, final String os) {
-        super(name, rrclass, RRType.HINFO, eol);
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrClass the record class
+     * @param ttlSpec the TTL spec
+     * @param cpu the CPU type
+     * @param os the OS type
+     */
+    public HInfoRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final String cpu, final String os) {
+        super(name, rrClass, RRType.HINFO, ttlSpec);
         this.cpu = cpu;
         this.os = os;
     }
 
-    public HInfoRecord(final Domain name, final long eol, final String cpu, final String os) {
-        this(name, RRClass.IN, eol, cpu, os);
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param ttlSpec the TTL spec
+     * @param cpu the CPU type
+     * @param os the OS type
+     */
+    public HInfoRecord(final Domain name, final TTLSpec ttlSpec, final String cpu, final String os) {
+        this(name, RRClass.IN, ttlSpec, cpu, os);
     }
 
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param cpu the CPU type
+     * @param os the OS type
+     */
     public HInfoRecord(final Domain name, final String cpu, final String os) {
-        this(name, 0L, cpu, os);
+        this(name, TTLSpec.ZERO, cpu, os);
     }
 
+    /**
+     * Get the CPU type.
+     *
+     * @return the CPU type
+     */
     public String getCpu() {
         return cpu;
     }
 
+    /**
+     * Get the OS type.
+     *
+     * @return the OS type
+     */
     public String getOs() {
         return os;
     }
 
+    /** {@inheritDoc} */
     protected void appendRData(final StringBuilder builder) {
         builder.append(" \"").append(cpu).append("\" \"").append(os).append('"');
     }

@@ -27,7 +27,7 @@ import java.io.IOException;
 public final class DNSException extends IOException {
 
     private static final long serialVersionUID = 3313733955232311955L;
-    private final Code code;
+    private final ResultCode code;
 
     /**
      * Constructs a <tt>DNSException</tt> with no detail message. The cause is not initialized, and may subsequently be
@@ -35,7 +35,7 @@ public final class DNSException extends IOException {
      *
      * @param code the reason code
      */
-    public DNSException(final Code code) {
+    public DNSException(final ResultCode code) {
         this.code = code;
     }
 
@@ -46,7 +46,7 @@ public final class DNSException extends IOException {
      * @param code the reason code
      * @param msg the detail message
      */
-    public DNSException(final Code code, final String msg) {
+    public DNSException(final ResultCode code, final String msg) {
         super(msg);
         this.code = code;
     }
@@ -60,7 +60,7 @@ public final class DNSException extends IOException {
      * @param code the reason code
      * @param cause the cause (which is saved for later retrieval by the {@link #getCause()} method)
      */
-    public DNSException(final Code code, final Throwable cause) {
+    public DNSException(final ResultCode code, final Throwable cause) {
         initCause(cause);
         this.code = code;
     }
@@ -72,7 +72,7 @@ public final class DNSException extends IOException {
      * @param msg the detail message
      * @param cause the cause (which is saved for later retrieval by the {@link #getCause()} method)
      */
-    public DNSException(final Code code, final String msg, final Throwable cause) {
+    public DNSException(final ResultCode code, final String msg, final Throwable cause) {
         super(msg);
         initCause(cause);
         this.code = code;
@@ -83,21 +83,7 @@ public final class DNSException extends IOException {
      *
      * @return the reason code
      */
-    public Code getCode() {
+    public ResultCode getCode() {
         return code;
-    }
-
-    /**
-     * The possible reason code values.
-     */
-    public enum Code {
-        NOERROR,
-        FORMAT_ERROR,
-        SERVER_FAILURE,
-        NAME_ERROR,
-        NOT_IMPLEMENTED,
-        REFUSED,
-        UNKNOWN,
-        ;
     }
 }

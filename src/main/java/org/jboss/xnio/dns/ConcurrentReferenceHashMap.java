@@ -4,7 +4,7 @@
  * http://creativecommons.org/licenses/publicdomain
  */
 
-package org.jboss.xnio.dns.impl;
+package org.jboss.xnio.dns;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.ref.Reference;

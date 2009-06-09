@@ -26,28 +26,61 @@ import org.jboss.xnio.dns.Record;
 import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.Domain;
+import org.jboss.xnio.dns.TTLSpec;
 
+/**
+ * A record of type {@link RRType#CNAME}.
+ */
 public class CNameRecord extends Record {
+
+    private static final long serialVersionUID = 6806325778477267585L;
 
     private final Domain cname;
 
-    public CNameRecord(final Domain name, final RRClass rrclass, final long eol, final Domain cname) {
-        super(name, rrclass, RRType.CNAME, eol);
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrclass the record class
+     * @param ttlSpec the TTL spec
+     * @param cname the destination domain name
+     */
+    public CNameRecord(final Domain name, final RRClass rrclass, final TTLSpec ttlSpec, final Domain cname) {
+        super(name, rrclass, RRType.CNAME, ttlSpec);
         this.cname = cname;
     }
 
-    public CNameRecord(final Domain name, final long eol, final Domain cname) {
-        this(name, RRClass.IN, eol, cname);
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param ttlSpec the TTL spec
+     * @param cname the destination domain name
+     */
+    public CNameRecord(final Domain name, final TTLSpec ttlSpec, final Domain cname) {
+        this(name, RRClass.IN, ttlSpec, cname);
     }
 
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param cname the destination domain name
+     */
     public CNameRecord(final Domain name, final Domain cname) {
-        this(name, 0L, cname);
+        this(name, TTLSpec.ZERO, cname);
     }
 
+    /**
+     * Get the target of this CNAME.
+     *
+     * @return the target domain
+     */
     public Domain getCname() {
         return cname;
     }
 
+    /** {@inheritDoc} */
     protected void appendRData(final StringBuilder builder) {
         builder.append(' ').append(cname);
     }

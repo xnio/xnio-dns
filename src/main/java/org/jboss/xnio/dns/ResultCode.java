@@ -20,39 +20,18 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.xnio.dns.record;
-
-import org.jboss.xnio.dns.Record;
-import org.jboss.xnio.dns.Domain;
-import org.jboss.xnio.dns.RRClass;
-import org.jboss.xnio.dns.RRType;
-import org.jboss.xnio.dns.TTLSpec;
+package org.jboss.xnio.dns;
 
 /**
- * A record of type {@link RRType#ANY}.
+ * The possible result code values.
  */
-public class AnyRecord extends Record {
-
-    private static final long serialVersionUID = -1357005801530421627L;
-
-    /**
-     * Construct a new instance.
-     *
-     * @param name the domain name
-     * @param rrClass the record class
-     * @param ttlSpec the TTL spec
-     */
-    public AnyRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec) {
-        super(name, rrClass, RRType.ANY, ttlSpec);
-    }
-
-    /**
-     * Construct a new instance.
-     *
-     * @param name the domain name
-     * @param ttlSpec the TTL spec
-     */
-    public AnyRecord(final Domain name, final TTLSpec ttlSpec) {
-        this(name, RRClass.IN, ttlSpec);
-    }
+public enum ResultCode {
+    NOERROR,
+    FORMAT_ERROR,
+    SERVER_FAILURE,
+    NAME_ERROR,
+    NOT_IMPLEMENTED,
+    REFUSED,
+    UNKNOWN,
+    ;
 }

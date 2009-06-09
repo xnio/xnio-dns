@@ -23,71 +23,35 @@
 package org.jboss.xnio.dns;
 
 import java.net.InetAddress;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.io.IOException;
-import org.jboss.xnio.IoFuture;
-import org.jboss.xnio.AbstractIoFuture;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public final class DNS {
     private DNS() {}
 
-    public static IoFuture<InetAddress[]> resolveInet(String name) {
-        return null;
-    }
+    private static final Pattern IP_ADDRESS_PATTERN = Pattern.compile(
+            // IPv4 dotted-decimal
+            "((\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.\\(d{1,3}))|" +
+            // IPv4 hex string
+            "([0-9a-fA-F]{1,8})|" +
+            // IPv6 full form
+            "((?:[0-9a-fA-F]{1,4}:){7}["
+    );
 
-    public static IoFuture<Inet4Address[]> resolveInet4(String name) {
-        return null;
-    }
+    public static InetAddress parse(String addressString) {
+        final Matcher matcher = IP_ADDRESS_PATTERN.matcher(addressString);
+        if (matcher.matches()) {
+            String group;
+            if ((group = matcher.group(1)) != null) {
+                int a = Integer.parseInt(matcher.group(2));
+                int b = Integer.parseInt(matcher.group(3));
+                int c = Integer.parseInt(matcher.group(4));
+                int d = Integer.parseInt(matcher.group(5));
 
-    public static IoFuture<Inet6Address[]> resolveInet6(String name) {
-        return null;
-    }
+            } else if ((group = matcher.group(6)) != null) {
 
-    public static IoFuture<String> resolveReverse(InetAddress address) {
-        return null;
-    }
-
-    public static IoFuture<String> resolveText(String name) {
-        return null;
-    }
-
-    public static IoFuture<Record> getAnswer(IoFuture<Answer> message, final String name, final RRClass rrClass, final RRType rrType) {
-        final FutureRecord futureRecord = new FutureRecord();
-        message.addNotifier(new IoFuture.HandlingNotifier<Answer, Object>() {
-            public void handleCancelled(final Object attachment) {
-                futureRecord.finishCancel();
             }
-
-            public void handleFailed(final IOException exception, final Object attachment) {
-                futureRecord.setException(exception);
-            }
-
-            public void handleDone(final Answer result, final Object attachment) {
-                for (Record record : result.getAnswerRecords()) {
-                    if (record.getRrClass().equals(rrClass) && record.getRrType().equals(rrType) && record.getName().equals(name)) {
-                        futureRecord.setResult(record);
-                        return;
-                    }
-                }
-                // not found
-                futureRecord.setResult(null);
-            }
-        }, null);
-        return futureRecord;
-    }
-
-    private static final class FutureRecord extends AbstractIoFuture<Record> {
-        protected boolean finishCancel() {
-            return super.finishCancel();
         }
-
-        protected boolean setResult(final Record result) {
-            return super.setResult(result);
-        }
-
-        protected boolean setException(final IOException exception) {
-            return super.setException(exception);
-        }
+        throw new AddressParseException("Not a valid IP address");
     }
 }

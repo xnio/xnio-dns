@@ -20,8 +20,19 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.xnio.dns.impl;
+package org.jboss.xnio.dns;
 
-public abstract class CacheEntry {
+import org.jboss.xnio.IoFuture;
+import org.jboss.xnio.FinishedIoFuture;
+import java.util.Set;
 
+/**
+ * A resolver which returns no results
+ */
+public final class EmptyResolver extends AbstractResolver {
+
+    /** {@inheritDoc}  This implementation always returns an empty answer. */
+    public IoFuture<Answer> resolve(final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
+        return new FinishedIoFuture<Answer>(new Answer(name, rrClass, rrType, ResultCode.NOERROR));
+    }
 }

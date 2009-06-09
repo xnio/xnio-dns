@@ -20,47 +20,36 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.xnio.dns.record;
+package org.jboss.xnio.dns;
 
-import java.net.Inet4Address;
-import org.jboss.xnio.dns.Record;
-import org.jboss.xnio.dns.RRClass;
-import org.jboss.xnio.dns.RRType;
-import org.jboss.xnio.dns.Domain;
-import org.jboss.xnio.dns.TTLSpec;
+import java.net.SocketAddress;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.jboss.xnio.IoFuture;
 
 /**
- * A record of type {@link RRType#A}.
+ * A resolver which delegates to one or more remote servers.
  */
-public class InetARecord extends Record {
-
-    private static final long serialVersionUID = -2685055677791879066L;
-
-    private final Inet4Address address;
+public final class DelegatingResolver extends AbstractResolver {
+    private final NetworkResolver networkResolver;
+    private final SocketAddress[] servers;
+    private final AtomicInteger cnt = new AtomicInteger();
 
     /**
      * Construct a new instance.
      *
-     * @param name the domain name
-     * @param ttlSpec the TTL spec
-     * @param address the IP address
+     * @param networkResolver the network resolver
+     * @param servers the array of servers to delegate to
      */
-    public InetARecord(final Domain name, final TTLSpec ttlSpec, final Inet4Address address) {
-        super(name, RRClass.IN, RRType.A, ttlSpec);
-        this.address = address;
-    }
-
-    /**
-     * Get the IP address.
-     *
-     * @return the IP address
-     */
-    public Inet4Address getAddress() {
-        return address;
+    public DelegatingResolver(final NetworkResolver networkResolver, final SocketAddress[] servers) {
+        this.networkResolver = networkResolver;
+        this.servers = servers;
     }
 
     /** {@inheritDoc} */
-    protected void appendRData(final StringBuilder builder) {
-        builder.append(' ').append(address.getHostAddress());
+    public IoFuture<Answer> resolve(final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
+        final SocketAddress[] servers = this.servers;
+        final SocketAddress serverAddress = servers[(cnt.getAndIncrement() & 0x7fffffff) % servers.length];
+        return networkResolver.resolve(serverAddress, name, rrClass, rrType, flags);
     }
 }

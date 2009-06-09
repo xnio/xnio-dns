@@ -28,14 +28,11 @@ import java.util.Set;
 import org.jboss.xnio.IoFuture;
 
 /**
- * A resolver which can query an external server.  All of the standard resolver methods are implemented by using
- * a default server of some sort.
+ * A resolver which can query an external server.
  */
-public interface NetworkResolver extends Resolver {
+public interface NetworkResolver {
 
-    IoFuture<Answer> resolve(Domain server, Domain name, RRClass rrClass, RRType rrType, Set<Flag> flags);
+    IoFuture<Answer> resolve(InetAddress server, Domain name, RRClass rrClass, RRType rrType, Set<ResolverFlag> flags);
 
-    IoFuture<Answer> resolve(InetAddress server, Domain name, RRClass rrClass, RRType rrType, Set<Flag> flags);
-
-    IoFuture<Answer> resolve(SocketAddress server, Domain name, RRClass rrClass, RRType rrType, Set<Flag> flags);
+    IoFuture<Answer> resolve(SocketAddress server, Domain name, RRClass rrClass, RRType rrType, Set<ResolverFlag> flags);
 }

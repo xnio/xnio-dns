@@ -30,47 +30,101 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 
 /**
- *
+ * A DNS resolver.
  */
 public interface Resolver {
 
-    IoFuture<Answer> resolve(Domain name, RRClass rrClass, RRType rrType, Set<Flag> flags);
+    /**
+     * Execute a DNS query.
+     *
+     * @param name the domain name
+     * @param rrClass the resource record class
+     * @param rrType the resource record type
+     * @param flags the query flags
+     * @return the future answer
+     */
+    IoFuture<Answer> resolve(Domain name, RRClass rrClass, RRType rrType, Set<ResolverFlag> flags);
 
+    /**
+     * Execute a DNS query.
+     *
+     * @param name the domain name
+     * @param rrClass the resource record class
+     * @param rrType the resource record type
+     * @return the future answer
+     */
     IoFuture<Answer> resolve(Domain name, RRClass rrClass, RRType rrType);
 
+    /**
+     * Execute a DNS query.  A resource record class of {@link org.jboss.xnio.dns.RRClass#IN} is assumed.
+     *
+     * @param name the domain name
+     * @param rrType the resource record type
+     * @return the future answer
+     */
     IoFuture<Answer> resolve(Domain name, RRType rrType);
 
+    /**
+     * Get all the IP addresses (IPv4 or IPv6) for the given domain name.
+     *
+     * @param name the domain name
+     * @return the future list of IP addresses
+     */
     IoFuture<List<InetAddress>> resolveAllInet(Domain name);
 
+    /**
+     * Get an IP address (IPv4 or IPv6) for the given domain name.
+     *
+     * @param name the domain name
+     * @return the future IP address
+     */
     IoFuture<InetAddress> resolveInet(Domain name);
 
+    /**
+     * Get all the IPv4 addresses for the given domain name.
+     *
+     * @param name the domain name
+     * @return the future list of IP addresses
+     */
     IoFuture<List<Inet4Address>> resolveAllInet4(Domain name);
 
+    /**
+     * Get all the IPv4 addresses for the given domain name.
+     *
+     * @param name the domain name
+     * @return the future IP address
+     */
     IoFuture<Inet4Address> resolveInet4(Domain name);
 
+    /**
+     * Get all the IPv6 addresses for the given domain name.
+     *
+     * @param name the domain name
+     * @return the future list of IP addresses
+     */
     IoFuture<List<Inet6Address>> resolveAllInet6(Domain name);
 
+    /**
+     * Get all the IPv6 addresses for the given domain name.
+     *
+     * @param name the domain name
+     * @return the future IP address
+     */
     IoFuture<Inet6Address> resolveInet6(Domain name);
 
+    /**
+     * Perform a reverse lookup of an IP address.
+     *
+     * @param address the IP address (IPv4 or IPv6)
+     * @return the future domain name
+     */
     IoFuture<Domain> resolveReverse(InetAddress address);
 
+    /**
+     * Perform a text-record lookup of a domain name.
+     *
+     * @param name the domain name
+     * @return the future list of text record data
+     */
     IoFuture<List<String>> resolveText(Domain name);
-
-    interface Flag {}
-
-    enum StandardFlag implements Flag {
-
-        /**
-         * Bypass the cache (if any).
-         */
-        NO_CACHE,
-        /**
-         * Bypass recursion.
-         */
-        NO_RECURSION,
-        /**
-         * Use TCP.
-         */
-        USE_TCP,
-    }
 }
