@@ -22,14 +22,33 @@
 
 package org.jboss.xnio.dns;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.Set;
-import org.jboss.xnio.IoFuture;
+final class DomainRecordKey {
+    private final RRClass rrClass;
+    private final RRType rrType;
+    private final Domain domain;
+    private final int hashCode;
 
-public abstract class AbstractNetworkResolver implements NetworkResolver {
+    DomainRecordKey(final Domain domain, final RRClass rrClass, final RRType rrType) {
+        this.rrClass = rrClass;
+        this.rrType = rrType;
+        this.domain = domain;
+        int result = rrClass.hashCode();
+        result = 31 * result + rrType.hashCode();
+        result = 31 * result + domain.hashCode();
+        hashCode = result;
+    }
 
-    public IoFuture<Answer> resolve(final InetAddress server, final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
-        return resolve(new InetSocketAddress(server, 53), name, rrClass, rrType, flags);
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (! (o instanceof DomainRecordKey)) return false;
+        final DomainRecordKey cacheKey = (DomainRecordKey) o;
+        if (!domain.equals(cacheKey.domain)) return false;
+        if (rrClass != cacheKey.rrClass) return false;
+        if (rrType != cacheKey.rrType) return false;
+        return true;
+    }
+
+    public int hashCode() {
+        return hashCode;
     }
 }

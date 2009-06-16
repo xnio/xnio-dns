@@ -56,7 +56,7 @@ public class Domain implements Serializable {
         }
 
         public String toString() {
-            return "Domain: .";
+            return ".";
         }
 
         public Domain getParent() {
@@ -351,7 +351,7 @@ public class Domain implements Serializable {
         }
 
         public String toString() {
-            return "\"" + getAscii() + "\"";
+            return getAscii();
         }
 
         public boolean equals(final Object obj) {

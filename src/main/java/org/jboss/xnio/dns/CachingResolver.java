@@ -34,25 +34,28 @@ import java.util.Set;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executor;
 import java.io.IOException;
 import static java.lang.Math.min;
 import static java.lang.Math.max;
 
 public final class CachingResolver extends AbstractResolver implements Resolver {
 
-    private final ConcurrentMap<CacheKey, FutureCacheValue> cache;
+    private final ConcurrentMap<DomainRecordKey, FutureCacheValue> cache;
     private final Resolver realResolver;
+    private final Executor executor;
 
     private static <K, V> ConcurrentMap<K, V> cacheMap() {
         return new ConcurrentReferenceHashMap<K, V>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL, STRONG, SOFT, EnumSet.noneOf(Option.class));
     }
 
-    public CachingResolver(final Resolver resolver) {
+    public CachingResolver(final Resolver resolver, final Executor executor) {
         cache = cacheMap();
         realResolver = resolver;
+        this.executor = executor;
     }
 
-    private FutureCacheValue getOrCreate(final CacheKey key, final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
+    private FutureCacheValue getOrCreate(final DomainRecordKey key, final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
         final FutureCacheValue result = cache.get(key);
         if (result != null) {
             return result;
@@ -60,7 +63,7 @@ public final class CachingResolver extends AbstractResolver implements Resolver 
         final FutureCacheValue newResult = new FutureCacheValue();
         final FutureCacheValue oldResult = cache.putIfAbsent(key, newResult);
         if (oldResult == null) {
-            final FutureAnswer ourFutureAnswer = new FutureAnswer();
+            final FutureAnswer ourFutureAnswer = new FutureAnswer(executor);
             final IoFuture<Answer> futureAnswer = realResolver.resolve(name, rrClass, rrType, flags);
             futureAnswer.addNotifier(new IoFuture.HandlingNotifier<Answer, FutureAnswer>() {
                 public void handleDone(final Answer result, final FutureAnswer futureAnswer) {
@@ -94,8 +97,8 @@ public final class CachingResolver extends AbstractResolver implements Resolver 
         if (flags.contains(ResolverFlag.BYPASS_CACHE)) {
             return realResolver.resolve(name, rrClass, rrType, flags);
         } else {
-            final CacheKey key = new CacheKey(name, rrClass, rrType);
-            final FutureAnswer futureAnswer = new FutureAnswer();
+            final DomainRecordKey key = new DomainRecordKey(name, rrClass, rrType);
+            final FutureAnswer futureAnswer = new FutureAnswer(executor);
             final FutureCacheValue futureValue;
 
             futureValue = cache.get(key);
@@ -114,37 +117,6 @@ public final class CachingResolver extends AbstractResolver implements Resolver 
             }
         }
         return null;
-    }
-
-    private static final class CacheKey {
-        private final RRClass rrClass;
-        private final RRType rrType;
-        private final Domain domain;
-        private final int hashCode;
-
-        private CacheKey(final Domain domain, final RRClass rrClass, final RRType rrType) {
-            this.rrClass = rrClass;
-            this.rrType = rrType;
-            this.domain = domain;
-            int result = rrClass.hashCode();
-            result = 31 * result + rrType.hashCode();
-            result = 31 * result + domain.hashCode();
-            hashCode = result;
-        }
-
-        public boolean equals(final Object o) {
-            if (this == o) return true;
-            if (! (o instanceof CacheKey)) return false;
-            final CacheKey cacheKey = (CacheKey) o;
-            if (!domain.equals(cacheKey.domain)) return false;
-            if (rrClass != cacheKey.rrClass) return false;
-            if (rrType != cacheKey.rrType) return false;
-            return true;
-        }
-
-        public int hashCode() {
-            return hashCode;
-        }
     }
 
     private static final class CacheValue {

@@ -34,8 +34,8 @@ import org.jboss.xnio.AbstractConvertingIoFuture;
 import org.jboss.xnio.IoFuture;
 import org.jboss.xnio.dns.record.TxtRecord;
 import org.jboss.xnio.dns.record.PtrRecord;
-import org.jboss.xnio.dns.record.InetARecord;
-import org.jboss.xnio.dns.record.InetAAAARecord;
+import org.jboss.xnio.dns.record.ARecord;
+import org.jboss.xnio.dns.record.AaaaRecord;
 
 /**
  * An abstract convenience base class for resolvers which implements the majority of the resolver methods.
@@ -165,11 +165,11 @@ public abstract class AbstractResolver implements Resolver {
             final List<Record> answers = arg.getAnswerRecords();
             final List<InetAddress> list = new ArrayList<InetAddress>(answers.size());
             for (Record record : answers) {
-                if (record instanceof InetARecord) {
-                    final InetARecord aRecord = (InetARecord) record;
+                if (record instanceof ARecord) {
+                    final ARecord aRecord = (ARecord) record;
                     list.add(aRecord.getAddress());
-                } else if (record instanceof InetAAAARecord) {
-                    final InetAAAARecord aaaaRecord = (InetAAAARecord) record;
+                } else if (record instanceof AaaaRecord) {
+                    final AaaaRecord aaaaRecord = (AaaaRecord) record;
                     list.add(aaaaRecord.getAddress());
                 }
             }
@@ -186,11 +186,11 @@ public abstract class AbstractResolver implements Resolver {
         protected InetAddress convert(final Answer arg) throws IOException {
             final List<Record> answers = arg.getAnswerRecords();
             for (Record record : answers) {
-                if (record instanceof InetARecord) {
-                    final InetARecord aRecord = (InetARecord) record;
+                if (record instanceof ARecord) {
+                    final ARecord aRecord = (ARecord) record;
                     return aRecord.getAddress();
-                } else if (record instanceof InetAAAARecord) {
-                    final InetAAAARecord aaaaRecord = (InetAAAARecord) record;
+                } else if (record instanceof AaaaRecord) {
+                    final AaaaRecord aaaaRecord = (AaaaRecord) record;
                     return aaaaRecord.getAddress();
                 }
             }
@@ -208,8 +208,8 @@ public abstract class AbstractResolver implements Resolver {
             final List<Record> answers = arg.getAnswerRecords();
             List<Inet4Address> list = new ArrayList<Inet4Address>(answers.size());
             for (Record record : answers) {
-                if (record instanceof InetARecord) {
-                    final InetARecord aRecord = (InetARecord) record;
+                if (record instanceof ARecord) {
+                    final ARecord aRecord = (ARecord) record;
                     list.add(aRecord.getAddress());
                 }
             }
@@ -226,8 +226,8 @@ public abstract class AbstractResolver implements Resolver {
         protected Inet4Address convert(final Answer arg) throws IOException {
             final List<Record> answers = arg.getAnswerRecords();
             for (Record record : answers) {
-                if (record instanceof InetARecord) {
-                    final InetARecord aRecord = (InetARecord) record;
+                if (record instanceof ARecord) {
+                    final ARecord aRecord = (ARecord) record;
                     return aRecord.getAddress();
                 }
             }
@@ -245,8 +245,8 @@ public abstract class AbstractResolver implements Resolver {
             final List<Record> answers = arg.getAnswerRecords();
             List<Inet6Address> list = new ArrayList<Inet6Address>(answers.size());
             for (Record record : answers) {
-                if (record instanceof InetAAAARecord) {
-                    final InetAAAARecord aaaaRecord = (InetAAAARecord) record;
+                if (record instanceof AaaaRecord) {
+                    final AaaaRecord aaaaRecord = (AaaaRecord) record;
                     list.add(aaaaRecord.getAddress());
                 }
             }
@@ -263,8 +263,8 @@ public abstract class AbstractResolver implements Resolver {
         protected Inet6Address convert(final Answer arg) throws IOException {
             final List<Record> answers = arg.getAnswerRecords();
             for (Record record : answers) {
-                if (record instanceof InetAAAARecord) {
-                    final InetAAAARecord aRecord = (InetAAAARecord) record;
+                if (record instanceof AaaaRecord) {
+                    final AaaaRecord aRecord = (AaaaRecord) record;
                     return aRecord.getAddress();
                 }
             }

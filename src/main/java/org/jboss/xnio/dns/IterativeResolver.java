@@ -26,16 +26,22 @@ import org.jboss.xnio.IoFuture;
 import org.jboss.xnio.FailedIoFuture;
 import org.jboss.xnio.FinishedIoFuture;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.io.IOException;
 
-public final class RecursiveResolver extends AbstractResolver {
+/**
+ * A resolver which queries servers iteratively until the complete answer is acquired.
+ */
+public final class IterativeResolver extends AbstractResolver {
 
     private final NetworkResolver networkResolver;
     private final Resolver localResolver;
+    private final Executor executor;
 
-    public RecursiveResolver(final NetworkResolver networkResolver, final Resolver localResolver) {
+    public IterativeResolver(final NetworkResolver networkResolver, final Resolver localResolver, final Executor executor) {
         this.networkResolver = networkResolver;
         this.localResolver = localResolver;
+        this.executor = executor;
     }
 
     public IoFuture<Answer> resolve(final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
@@ -46,7 +52,7 @@ public final class RecursiveResolver extends AbstractResolver {
         if (flags.contains(ResolverFlag.NO_RECURSION)) {
             return new FinishedIoFuture<Answer>(new Answer(name, rrClass, rrType, ResultCode.NOERROR));
         }
-        final FutureAnswer futureAnswer = new FutureAnswer();
+        final FutureAnswer futureAnswer = new FutureAnswer(executor);
         final IoFuture<Answer> futureParentNs = localResolver.resolve(name.getParent(), RRClass.IN, RRType.NS);
         futureParentNs.addNotifier(new IoFuture.HandlingNotifier<Answer, FutureAnswer>() {
             public void handleDone(final Answer result, final FutureAnswer futureAnswer) {

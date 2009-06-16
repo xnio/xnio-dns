@@ -26,8 +26,10 @@ import org.jboss.xnio.AbstractIoFuture;
 import org.jboss.xnio.IoFuture;
 import org.jboss.xnio.Cancellable;
 import java.io.IOException;
+import java.util.concurrent.Executor;
 
 class FutureAnswer extends AbstractIoFuture<Answer> implements IoFuture<Answer> {
+    private final Executor executor;
 
     static final Notifier<Answer, FutureAnswer> FUTURE_ANSWER_NOTIFIER = new HandlingNotifier<Answer, FutureAnswer>() {
         public void handleCancelled(final FutureAnswer attachment) {
@@ -43,6 +45,10 @@ class FutureAnswer extends AbstractIoFuture<Answer> implements IoFuture<Answer> 
         }
     };
 
+    public FutureAnswer(final Executor executor) {
+        this.executor = executor;
+    }
+
     protected boolean setException(final IOException exception) {
         return super.setException(exception);
     }
@@ -57,5 +63,9 @@ class FutureAnswer extends AbstractIoFuture<Answer> implements IoFuture<Answer> 
 
     protected void addCancelHandler(final Cancellable cancellable) {
         super.addCancelHandler(cancellable);
+    }
+
+    protected Executor getNotifierExecutor() {
+        return super.getNotifierExecutor();
     }
 }

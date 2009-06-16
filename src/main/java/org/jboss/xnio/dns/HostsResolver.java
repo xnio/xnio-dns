@@ -38,8 +38,8 @@ import java.util.Map;
 import java.util.Set;
 import org.jboss.xnio.FinishedIoFuture;
 import org.jboss.xnio.IoFuture;
-import org.jboss.xnio.dns.record.InetAAAARecord;
-import org.jboss.xnio.dns.record.InetARecord;
+import org.jboss.xnio.dns.record.AaaaRecord;
+import org.jboss.xnio.dns.record.ARecord;
 
 /**
  * A HOSTS file resolver.
@@ -122,7 +122,7 @@ public final class HostsResolver extends AbstractResolver {
                 if (address instanceof Inet4Address) {
                     final Answer answer = new Answer(name, rrClass, rrType, ResultCode.NOERROR);
                     final List<Record> records = answer.getAnswerRecords();
-                    records.add(new InetARecord(name, TTLSpec.ZERO, (Inet4Address) address));
+                    records.add(new ARecord(name, TTLSpec.ZERO, (Inet4Address) address));
                     return new FinishedIoFuture<Answer>(answer);
                 }
             } else if (rrType == RRType.AAAA) {
@@ -130,7 +130,7 @@ public final class HostsResolver extends AbstractResolver {
                 if (address instanceof Inet6Address) {
                     final Answer answer = new Answer(name, rrClass, rrType, ResultCode.NOERROR);
                     final List<Record> records = answer.getAnswerRecords();
-                    records.add(new InetAAAARecord(name, TTLSpec.ZERO, (Inet6Address) address));
+                    records.add(new AaaaRecord(name, TTLSpec.ZERO, (Inet6Address) address));
                     return new FinishedIoFuture<Answer>(answer);
                 }
             }

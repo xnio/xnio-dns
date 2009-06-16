@@ -22,14 +22,18 @@
 
 package org.jboss.xnio.dns;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.Set;
 import org.jboss.xnio.IoFuture;
+import java.util.Set;
+import java.util.Map;
+import java.util.Collections;
 
-public abstract class AbstractNetworkResolver implements NetworkResolver {
+public final class LocalZoneResolver extends AbstractResolver {
 
-    public IoFuture<Answer> resolve(final InetAddress server, final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
-        return resolve(new InetSocketAddress(server, 53), name, rrClass, rrType, flags);
+    private volatile Map<Domain, Set<Record>> zoneInfo = Collections.emptyMap();
+
+    public IoFuture<Answer> resolve(final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
+        return null;
     }
+
+
 }

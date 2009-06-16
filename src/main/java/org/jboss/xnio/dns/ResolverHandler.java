@@ -22,14 +22,26 @@
 
 package org.jboss.xnio.dns;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.Set;
-import org.jboss.xnio.IoFuture;
+import org.jboss.xnio.IoHandler;
+import org.jboss.xnio.channels.UdpChannel;
 
-public abstract class AbstractNetworkResolver implements NetworkResolver {
+public final class ResolverHandler implements IoHandler<UdpChannel> {
+    private final Resolver resolver;
 
-    public IoFuture<Answer> resolve(final InetAddress server, final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
-        return resolve(new InetSocketAddress(server, 53), name, rrClass, rrType, flags);
+    public ResolverHandler(final Resolver resolver) {
+        this.resolver = resolver;
+    }
+
+    public void handleOpened(final UdpChannel channel) {
+    }
+
+    public void handleClosed(final UdpChannel channel) {
+    }
+
+    public void handleReadable(final UdpChannel channel) {
+        
+    }
+
+    public void handleWritable(final UdpChannel channel) {
     }
 }
