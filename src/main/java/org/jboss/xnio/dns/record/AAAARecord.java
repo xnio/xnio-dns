@@ -32,7 +32,7 @@ import org.jboss.xnio.dns.TTLSpec;
 /**
  * A record of type {@link RRType#AAAA}.
  */
-public class InetAAAARecord extends Record {
+public class AAAARecord extends Record {
     private static final long serialVersionUID = -8702941004736168982L;
 
     private final Inet6Address address;
@@ -41,12 +41,34 @@ public class InetAAAARecord extends Record {
      * Construct a new instance.
      *
      * @param name the domain name
+     * @param rrClass the resource record class
      * @param ttlSpec the TTL spec
      * @param address the IPv6 address
      */
-    public InetAAAARecord(final Domain name, final TTLSpec ttlSpec, final Inet6Address address) {
-        super(name, RRClass.IN, RRType.A, ttlSpec);
+    public AAAARecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final Inet6Address address) {
+        super(name, rrClass, RRType.AAAA, ttlSpec);
         this.address = address;
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param ttlSpec the TTL spec
+     * @param address the IPv6 address
+     */
+    public AAAARecord(final Domain name, final TTLSpec ttlSpec, final Inet6Address address) {
+        this(name, RRClass.IN, ttlSpec, address);
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param address the IPv6 address
+     */
+    public AAAARecord(final Domain name, final Inet6Address address) {
+        this(name, TTLSpec.ZERO, address);
     }
 
     /**

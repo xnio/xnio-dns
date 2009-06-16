@@ -55,4 +55,13 @@ public class AnyRecord extends Record {
     public AnyRecord(final Domain name, final TTLSpec ttlSpec) {
         this(name, RRClass.IN, ttlSpec);
     }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     */
+    public AnyRecord(final Domain name) {
+        this(name, TTLSpec.ZERO);
+    }
 }

@@ -41,12 +41,34 @@ public class TxtRecord extends Record {
      * Construct a new instance.
      *
      * @param name the domain name
-     * @param ttlSpec the TTl spec
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param text the text data
+     */
+    public TxtRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final String text) {
+        super(name, rrClass, RRType.TXT, ttlSpec);
+        this.text = text;
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param ttlSpec the TTL spec
      * @param text the text data
      */
     public TxtRecord(final Domain name, final TTLSpec ttlSpec, final String text) {
-        super(name, RRClass.IN, RRType.TXT, ttlSpec);
-        this.text = text;
+        this(name, RRClass.IN, ttlSpec, text);
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param text the text data
+     */
+    public TxtRecord(final Domain name, final String text) {
+        this(name, TTLSpec.ZERO, text);
     }
 
     /**
