@@ -26,14 +26,53 @@ import org.jboss.xnio.IoFuture;
 import java.util.Set;
 import java.util.Map;
 import java.util.Collections;
+import java.util.EnumMap;
 
 public final class LocalZoneResolver extends AbstractResolver {
 
-    private volatile Map<Domain, Set<Record>> zoneInfo = Collections.emptyMap();
+    private volatile Map<Domain, Map<Key, Set<Record>>> zoneInfo = Collections.emptyMap();
 
     public IoFuture<Answer> resolve(final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
+        final Map<Domain, Map<Key, Set<Record>>> zoneInfo = this.zoneInfo;
+        Map<Key, Set<Record>> zoneMap;
+        if ((zoneMap = zoneInfo.get(name)) != null) {
+            final Set<Record> recordSet = zoneMap.get(keyFor(rrType, rrClass));
+            
+        }
+        final Domain.Label[] parts = name.getParts();
+        
         return null;
     }
 
+    private static final class Key {
+        private final RRClass rrClass;
+        private final RRType rrType;
+        private final int hashCode;
 
+        private static final int numValues = RRClass.values().length;
+
+        private Key(final RRClass rrClass, final RRType rrType) {
+            this.rrClass = rrClass;
+            this.rrType = rrType;
+            hashCode = rrClass.ordinal() + rrType.ordinal() * numValues;
+        }
+    }
+
+    private static Key keyFor(RRType rrType, RRClass rrClass) {
+        return keys.get(rrType).get(rrClass);
+    }
+
+    private static final EnumMap<RRType, EnumMap<RRClass, Key>> keys;
+
+    static {
+        final EnumMap<RRType, EnumMap<RRClass, Key>> map = new EnumMap<RRType, EnumMap<RRClass, Key>>(RRType.class);
+        for (RRType rrType : RRType.values()) {
+            final EnumMap<RRClass, Key> innerMap = new EnumMap<RRClass, Key>(RRClass.class);
+            map.put(rrType, innerMap);
+            for (RRClass rrClass : RRClass.values()) {
+                innerMap.put(rrClass, new Key(rrClass, rrType));
+            }
+        }
+        keys = map;
+    }
 }
