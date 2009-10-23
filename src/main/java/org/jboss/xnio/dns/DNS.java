@@ -23,35 +23,49 @@
 package org.jboss.xnio.dns;
 
 import java.net.InetAddress;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+import java.net.Inet6Address;
+import java.net.Inet4Address;
 
+/**
+ * DNS general utility methods.
+ */
 public final class DNS {
+
     private DNS() {}
 
-    private static final Pattern IP_ADDRESS_PATTERN = Pattern.compile(
-            // IPv4 dotted-decimal
-            "((\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.\\(d{1,3}))|" +
-            // IPv4 hex string
-            "([0-9a-fA-F]{1,8})|" +
-            // IPv6 full form
-            "((?:[0-9a-fA-F]{1,4}:){7}["
-    );
+    /**
+     * Parse an IP address string.
+     *
+     * @param hostName the host name to use for the resultant {@code InetAddress} object
+     * @param addressString the address string to parse
+     * @return the address
+     * @throws AddressParseException if the address string is not a valid IP address
+     */
+    public InetAddress parseInetAddress(String hostName, String addressString) throws AddressParseException {
+        return IPParserImpl.parseAddress(IPParserImpl.Kind.IP, hostName, addressString);
+    }
 
-    public static InetAddress parse(String addressString) {
-        final Matcher matcher = IP_ADDRESS_PATTERN.matcher(addressString);
-        if (matcher.matches()) {
-            String group;
-            if ((group = matcher.group(1)) != null) {
-                int a = Integer.parseInt(matcher.group(2));
-                int b = Integer.parseInt(matcher.group(3));
-                int c = Integer.parseInt(matcher.group(4));
-                int d = Integer.parseInt(matcher.group(5));
+    /**
+     * Parse an IPv4 address string.
+     *
+     * @param hostName the host name to use for the resultant {@code Inet4Address} object
+     * @param addressString the address string to parse
+     * @return the address
+     * @throws AddressParseException if the address string is not a valid IPv4 address
+     */
+    public Inet4Address parseInet4Address(String hostName, String addressString) throws AddressParseException {
+        return (Inet4Address) IPParserImpl.parseAddress(IPParserImpl.Kind.IPv4, hostName, addressString);
+    }
 
-            } else if ((group = matcher.group(6)) != null) {
-
-            }
-        }
-        throw new AddressParseException("Not a valid IP address");
+    /**
+     * Parse an IPv6 address string.
+     *
+     * @param hostName the host name to use for the resultant {@code Inet6Address} object
+     * @param addressString the address string to parse
+     * @return the address
+     * @throws AddressParseException if the address string is not a valid IPv6 address
+     */
+    public Inet6Address parseInet6Address(String hostName, String addressString) throws AddressParseException {
+        return (Inet6Address) IPParserImpl.parseAddress(IPParserImpl.Kind.IPv6, hostName, addressString);
     }
 }

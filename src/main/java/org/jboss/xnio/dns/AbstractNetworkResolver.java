@@ -24,12 +24,20 @@ package org.jboss.xnio.dns;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.Set;
-import org.jboss.xnio.IoFuture;
 
+/**
+ * An abstract base class for network resolvers.
+ */
 public abstract class AbstractNetworkResolver implements NetworkResolver {
 
-    public IoFuture<Answer> resolve(final InetAddress server, final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
-        return resolve(new InetSocketAddress(server, 53), name, rrClass, rrType, flags);
+    /**
+     * Construct a new instance.
+     */
+    protected AbstractNetworkResolver() {
+    }
+
+    /** {@inheritDoc} */
+    public Resolver resolverFor(final InetAddress server) {
+        return resolverFor(new InetSocketAddress(server, 53));
     }
 }

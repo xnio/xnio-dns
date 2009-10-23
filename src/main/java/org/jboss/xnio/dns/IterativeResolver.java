@@ -50,7 +50,14 @@ public final class IterativeResolver extends AbstractResolver {
             return new FailedIoFuture<Answer>(new DNSException(ResultCode.SERVER_FAILURE, "No root hints loaded"));
         }
         if (flags.contains(ResolverFlag.NO_RECURSION)) {
-            return new FinishedIoFuture<Answer>(new Answer(name, rrClass, rrType, ResultCode.NOERROR));
+            return new FinishedIoFuture<Answer>(
+                    Answer.builder()
+                            .setQueryDomain(name)
+                            .setQueryRRClass(rrClass)
+                            .setQueryRRType(rrType)
+                            .setResultCode(ResultCode.NOERROR)
+                            .create()
+            );
         }
         final FutureAnswer futureAnswer = new FutureAnswer(executor);
         final IoFuture<Answer> futureParentNs = localResolver.resolve(name.getParent(), RRClass.IN, RRType.NS);

@@ -22,125 +22,102 @@
 
 package org.jboss.xnio.dns;
 
-import static org.jboss.xnio.dns.ConcurrentReferenceHashMap.DEFAULT_INITIAL_CAPACITY;
-import static org.jboss.xnio.dns.ConcurrentReferenceHashMap.DEFAULT_LOAD_FACTOR;
-import static org.jboss.xnio.dns.ConcurrentReferenceHashMap.DEFAULT_CONCURRENCY_LEVEL;
-import static org.jboss.xnio.dns.ConcurrentReferenceHashMap.ReferenceType.STRONG;
-import static org.jboss.xnio.dns.ConcurrentReferenceHashMap.ReferenceType.SOFT;
-import static org.jboss.xnio.dns.ConcurrentReferenceHashMap.Option;
 import org.jboss.xnio.IoFuture;
-import org.jboss.xnio.AbstractIoFuture;
 import java.util.Set;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.concurrent.Executor;
 import java.io.IOException;
-import static java.lang.Math.min;
-import static java.lang.Math.max;
 
 public final class CachingResolver extends AbstractResolver implements Resolver {
 
-    private final ConcurrentMap<DomainRecordKey, FutureCacheValue> cache;
+    private final Map<QueryKey, IoFuture.Manager<Answer>> cache;
     private final Resolver realResolver;
     private final Executor executor;
 
-    private static <K, V> ConcurrentMap<K, V> cacheMap() {
-        return new ConcurrentReferenceHashMap<K, V>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL, STRONG, SOFT, EnumSet.noneOf(Option.class));
-    }
-
-    public CachingResolver(final Resolver resolver, final Executor executor) {
-        cache = cacheMap();
+    public CachingResolver(final Resolver resolver, final Executor executor, final int cacheSize) {
+        cache = new CacheMap<QueryKey, IoFuture.Manager<Answer>>(cacheSize);
         realResolver = resolver;
         this.executor = executor;
     }
 
-    private FutureCacheValue getOrCreate(final DomainRecordKey key, final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
-        final FutureCacheValue result = cache.get(key);
-        if (result != null) {
-            return result;
-        }
-        final FutureCacheValue newResult = new FutureCacheValue();
-        final FutureCacheValue oldResult = cache.putIfAbsent(key, newResult);
-        if (oldResult == null) {
-            final FutureAnswer ourFutureAnswer = new FutureAnswer(executor);
-            final IoFuture<Answer> futureAnswer = realResolver.resolve(name, rrClass, rrType, flags);
-            futureAnswer.addNotifier(new IoFuture.HandlingNotifier<Answer, FutureAnswer>() {
-                public void handleDone(final Answer result, final FutureAnswer futureAnswer) {
-                    final List<Record> answerList = result.getAnswerRecords();
-                    int matchCnt = 0;
-                    int ttl = 0;
-                    final RRClass queryRrClass = rrClass;
-                    final RRType queryRrType = rrType;
-                    for (Record record : answerList) {
-                        if (record.getRrClass() == queryRrClass && record.getRrType() == queryRrType) {
-                            matchCnt++;
-                        }
-                        
-                    }
-                    Record[] records = answerList.toArray(new Record[answerList.size()]);
-                    newResult.setResult(new CacheValue(records));
-                    futureAnswer.setResult(result);
-                }
-
-                public void handleFailed(final IOException exception, final FutureAnswer futureAnswer) {
-                    futureAnswer.setException(exception);
-                }
-            }, ourFutureAnswer);
-            return newResult;
-        } else {
-            return oldResult;
-        }
-    }
-
+    /** {@inheritDoc} */
     public IoFuture<Answer> resolve(final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
         if (flags.contains(ResolverFlag.BYPASS_CACHE)) {
+            // skip the cache, do not record results
             return realResolver.resolve(name, rrClass, rrType, flags);
         } else {
-            final DomainRecordKey key = new DomainRecordKey(name, rrClass, rrType);
-            final FutureAnswer futureAnswer = new FutureAnswer(executor);
-            final FutureCacheValue futureValue;
-
-            futureValue = cache.get(key);
-            if (futureValue == null) {
-
-            } else {
-                futureValue.addNotifier(new IoFuture.HandlingNotifier<CacheValue, FutureAnswer>() {
-                    public void handleFailed(final IOException exception, final FutureAnswer attachment) {
-                        attachment.setException(exception);
+            final QueryKey key = new QueryKey(name, rrClass, rrType);
+            final IoFuture.Manager<Answer> newAnswer;
+            synchronized (cache) {
+                final IoFuture.Manager<Answer> future = cache.get(key);
+                if (future != null) {
+                    final IoFuture.Status status = future.getIoFuture().getStatus();
+                    if (status == IoFuture.Status.WAITING) {
+                        // still waiting for result
+                        return future.getIoFuture();
+                    } else if (status == IoFuture.Status.DONE) {
+                        try {
+                            boolean expired = false;
+                            for (Record record : future.getIoFuture().get().getAnswerRecords()) {
+                                if (record.getTtlSpec().isExpired()) {
+                                    expired = true;
+                                    break;
+                                }
+                            }
+                            if (! expired) {
+                                return future.getIoFuture();
+                            }
+                        } catch (IOException e) {
+                            // fall out and re-query, the future has gone bad
+                            // technically shouldn't be possible because status was "done"
+                        }
                     }
-
-                    public void handleDone(final CacheValue result, final FutureAnswer attachment) {
-
-                    }
-                }, futureAnswer);
+                }
+                newAnswer = new IoFuture.Manager<Answer>(executor);
+                cache.put(key, newAnswer);
             }
+            final IoFuture<Answer> realFuture = realResolver.resolve(name, rrClass, rrType, flags);
+            realFuture.addNotifier(new IoFuture.HandlingNotifier<Answer, IoFuture.Manager<Answer>>() {
+                public void handleCancelled(final IoFuture.Manager<Answer> attachment) {
+                    synchronized (cache) {
+                        if (cache.get(key).equals(attachment)) {
+                            cache.remove(key);
+                        }
+                    }
+                    attachment.finishCancel();
+                }
+
+                public void handleFailed(final IOException exception, final IoFuture.Manager<Answer> attachment) {
+                    synchronized (cache) {
+                        if (cache.get(key).equals(attachment)) {
+                            cache.remove(key);
+                        }
+                    }
+                    attachment.setException(exception);
+                }
+
+                public void handleDone(final Answer result, final IoFuture.Manager<Answer> attachment) {
+                    attachment.setResult(result);
+                }
+            }, newAnswer);
+            return newAnswer.getIoFuture();
         }
-        return null;
     }
 
-    private static final class CacheValue {
-        private final Record[] records;
-        private final TTLSpec ttl;
+    private static final class CacheMap<K, V> extends LinkedHashMap<K, V> {
 
-        private CacheValue(final Record[] records) {
-            this.records = records;
-            int ttl = Integer.MAX_VALUE;
-            for (Record record : records) {
-                ttl = max(0, min(ttl, record.getTtlSpec().getTtl()));
-            }
-            this.ttl = TTLSpec.createVariable(((long)ttl * 1000) + System.currentTimeMillis());
-        }
-    }
+        private static final long serialVersionUID = 733255475501069288L;
 
-    private static final class FutureCacheValue extends AbstractIoFuture<CacheValue> {
+        private final int max;
 
-        protected boolean setException(final IOException exception) {
-            return super.setException(exception);
+        CacheMap(final int max) {
+            super(64, 0.6f, true);
+            this.max = max;
         }
 
-        protected boolean setResult(final CacheValue result) {
-            return super.setResult(result);
+        protected boolean removeEldestEntry(final Map.Entry<K, V> eldest) {
+            return size() > max;
         }
     }
 }

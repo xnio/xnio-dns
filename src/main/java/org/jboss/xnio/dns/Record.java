@@ -23,6 +23,20 @@
 package org.jboss.xnio.dns;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import org.jboss.xnio.dns.record.AaaaRecord;
+import org.jboss.xnio.dns.record.ARecord;
+import org.jboss.xnio.dns.record.CNameRecord;
+import org.jboss.xnio.dns.record.HInfoRecord;
+import org.jboss.xnio.dns.record.MxRecord;
+import org.jboss.xnio.dns.record.NsRecord;
+import org.jboss.xnio.dns.record.PtrRecord;
+import org.jboss.xnio.dns.record.SoaRecord;
+import org.jboss.xnio.dns.record.TxtRecord;
+import org.jboss.xnio.dns.record.UnknownRecord;
+import org.jboss.xnio.dns.record.WksRecord;
+import org.jboss.xnio.Buffers;
 
 /**
  * A resource record.
@@ -104,5 +118,33 @@ public abstract class Record implements Serializable {
         builder.append(name).append(' ').append(getTtlSpec().getTtl()).append(' ').append(rrClass).append(' ').append(rrType);
         appendRData(builder);
         return builder.toString();
+    }
+
+    /**
+     * Construct an instance from bytes in a byte buffer.
+     *
+     * @param buffer the source buffer
+     * @return the resource record
+     */
+    public static Record fromBytes(final ByteBuffer buffer) {
+        final Domain name = Domain.fromBytes(buffer);
+        final RRType rrType = RRType.fromInt(buffer.getShort() & 0xffff);
+        final RRClass rrClass = RRClass.fromInt(buffer.getShort() & 0xffff);
+        final TTLSpec ttlSpec = TTLSpec.createFixed(buffer.getInt());
+        final ByteBuffer recordBuffer = Buffers.slice(buffer, buffer.getShort() & 0xffff);
+        switch (rrType) {
+            case AAAA:  return new AaaaRecord (name, rrClass, ttlSpec, recordBuffer);
+            case A:     return new ARecord    (name, rrClass, ttlSpec, recordBuffer);
+            case CNAME: return new CNameRecord(name, rrClass, ttlSpec, recordBuffer);
+            case HINFO: return new HInfoRecord(name, rrClass, ttlSpec, recordBuffer);
+            case MX:    return new MxRecord   (name, rrClass, ttlSpec, recordBuffer);
+            case NS:    return new NsRecord   (name, rrClass, ttlSpec, recordBuffer);
+            case PTR:   return new PtrRecord  (name, rrClass, ttlSpec, recordBuffer);
+            case SOA:   return new SoaRecord  (name, rrClass, ttlSpec, recordBuffer);
+            case TXT:   return new TxtRecord  (name, rrClass, ttlSpec, recordBuffer);
+            case WKS:   return new WksRecord  (name, rrClass, ttlSpec, recordBuffer);
+
+            default:    return new UnknownRecord(name, rrClass, rrType, ttlSpec, recordBuffer);
+        }
     }
 }

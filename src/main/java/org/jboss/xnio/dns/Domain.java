@@ -142,9 +142,113 @@ public class Domain implements Serializable {
             labels[j++] = Label.HEX_DIGITS[(b & 0xf0) >> 4];
             labels[j++] = Label.HEX_DIGITS[b & 0x0f];
         }
-        labels[33] = Label.IN_ADDR;
-        labels[34] = Label.ARPA;
+        labels[32] = Label.IN_ADDR;
+        labels[33] = Label.ARPA;
         return new Domain(labels);
+    }
+
+    /**
+     * Determine whether this domain is an ".in-addr.arpa." domain.
+     *
+     * @return {@code true} if this is a reverse IP domain
+     */
+    public boolean isReverseArpa() {
+        final Label[] parts = this.parts;
+        final int len = parts.length;
+        return len > 2 && parts[len - 1].equals(Label.ARPA) && parts[len - 2].equals(Label.IN_ADDR);
+    }
+
+    /**
+     * Determine whether this domain is a complete address specification in an ".in-addr.arpa" domain.  It
+     * has to have 32 single hex digit parts for an IPv6 address, or 4 decimal parts for an IPv4 address.
+     *
+     * @return {@code true} if this is a complete address specification
+     */
+    public boolean isReverseArpaAddress() {
+        final Label[] parts = this.parts;
+        final int len = parts.length;
+        return isReverseArpa() && (len == 6 || len == 34);
+    }
+
+    private static byte parseUByte(Label label) throws IllegalArgumentException {
+        try {
+            final int v = Integer.parseInt(label.toString());
+            if (v >= 0 && v < 256) {
+                return (byte) v;
+            }
+        } catch (NumberFormatException e) {
+        }
+        throw new IllegalArgumentException();
+    }
+
+    private static byte parseUByte(Label low, Label high) throws IllegalArgumentException {
+        try {
+            final int v = Integer.parseInt(low.toString(), 16);
+            if (v >= 0 && v < 16) {
+                final int z = Integer.parseInt(high.toString(), 16);
+                if (z >= 0 && z < 16) {
+                    return (byte) (z << 4 | v);
+                }
+            }
+        } catch (NumberFormatException e) {
+        }
+        throw new IllegalArgumentException();
+    }
+
+    /**
+     * Get the reverse-ARPA bytes if this is a complete address specification in an ".in-addr.arpa" domain.  Returns
+     * four bytes for an IP4 address and 16 bytes for an IP6 address.
+     *
+     * @return the bytes
+     * @throws IllegalArgumentException if the domain is not a reverse-arpa domain or if one of the address octets was not parsable
+     */
+    public byte[] getReverseArpaBytes() throws IllegalArgumentException {
+        final Label[] parts = this.parts;
+        final int len = parts.length;
+        if (! isReverseArpaAddress()) {
+            throw new IllegalArgumentException();
+        }
+        if (len == 6) {
+            return new byte[] { parseUByte(parts[3]), parseUByte(parts[2]), parseUByte(parts[1]), parseUByte(parts[0]) };
+        } else {
+            final byte[] bytes = new byte[16];
+            for (int i = 0; i < 16; i ++) {
+                bytes[i] = parseUByte(parts[32 - (i * 2)], parts[31 - (i * 2)]);
+            }
+            return bytes;
+        }
+    }
+
+    public static Domain fromBytes(ByteBuffer buffer) {
+        return fromBytes(buffer, new ArrayList<Label>(), 0);
+    }
+
+    private static Domain fromBytes(ByteBuffer buffer, List<Label> labels, int depth) {
+        if (depth > 32) {
+            throw new IllegalStateException("Nested level too deep");
+        }
+        final byte leadByte = buffer.get();
+        for (;;) switch (leadByte & 0xc0) {
+            case 0x00: {
+                if (leadByte == 0) {
+                    if (labels.size() == 0) {
+                        return ROOT;
+                    } else {
+                        return new Domain(labels.toArray(new Label[labels.size()]));
+                    }
+                }
+                labels.add(Label.fromBytes(leadByte & 0x1f, buffer));
+            }
+            case 0xc0: {
+                final int offs = ((leadByte & 0x3F) << 8) | (buffer.get() & 0xff);
+                final ByteBuffer newBuf = buffer.duplicate();
+                newBuf.position(offs);
+                return fromBytes(newBuf, labels, depth + 1);
+            }
+            default: {
+                throw new IllegalStateException("Invalid label byte");
+            }
+        }
     }
 
     public int hashCode() {
@@ -166,6 +270,21 @@ public class Domain implements Serializable {
         for (Label part : parts) {
             builder.append(part);
             builder.append('.');
+        }
+        return builder.toString();
+    }
+
+    /**
+     * Get the fully-qualified host name (with no trailing dot) for this domain.  The root domain will return an empty string.
+     *
+     * @return the host name
+     */
+    public String getHostName() {
+        final StringBuilder builder = new StringBuilder();
+        final Label[] parts = this.parts;
+        for (int i = 0; i < parts.length; i++) {
+            builder.append(parts[i]);
+            if (i < parts.length - 1) builder.append('.');
         }
         return builder.toString();
     }
@@ -378,38 +497,6 @@ public class Domain implements Serializable {
                 }
             }
             return Integer.signum(bytesLen - oBytesLen);
-        }
-
-        public static Domain fromBytes(ByteBuffer buffer) {
-            return fromBytes(buffer, new ArrayList<Label>(), 0);
-        }
-
-        private static Domain fromBytes(ByteBuffer buffer, List<Label> labels, int depth) {
-            if (depth > 32) {
-                throw new IllegalStateException("Nested level too deep");
-            }
-            final byte leadByte = buffer.get();
-            for (;;) switch (leadByte & 0xc0) {
-                case 0x00: {
-                    if (leadByte == 0) {
-                        if (labels.size() == 0) {
-                            return ROOT;
-                        } else {
-                            return new Domain(labels.toArray(new Label[labels.size()]));
-                        }
-                    }
-                    labels.add(Label.fromBytes(leadByte & 0x1f, buffer));
-                }
-                case 0xc0: {
-                    final int offs = ((leadByte & 0x3F) << 8) | (buffer.get() & 0xff);
-                    final ByteBuffer newBuf = buffer.duplicate();
-                    newBuf.position(offs);
-                    return fromBytes(newBuf, labels, depth + 1);
-                }
-                default: {
-                    throw new IllegalStateException("Invalid label byte");
-                }
-            }
         }
 
         private static final class SubSeq implements CharSequence, Serializable {

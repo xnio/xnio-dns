@@ -22,26 +22,34 @@
 
 package org.jboss.xnio.dns;
 
-import org.jboss.xnio.IoHandler;
-import org.jboss.xnio.channels.UdpChannel;
+final class QueryKey {
+    private final RRClass rrClass;
+    private final RRType rrType;
+    private final Domain domain;
+    private final int hashCode;
 
-public final class ResolverHandler implements IoHandler<UdpChannel> {
-    private final Resolver resolver;
-
-    public ResolverHandler(final Resolver resolver) {
-        this.resolver = resolver;
+    QueryKey(final Domain domain, final RRClass rrClass, final RRType rrType) {
+        this.rrClass = rrClass;
+        this.rrType = rrType;
+        this.domain = domain;
+        int result = rrClass.hashCode();
+        result = 31 * result + rrType.hashCode();
+        result = 31 * result + domain.hashCode();
+        hashCode = result;
     }
 
-    public void handleOpened(final UdpChannel channel) {
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (! (o instanceof QueryKey)) return false;
+        final QueryKey cacheKey = (QueryKey) o;
+        if (hashCode != cacheKey.hashCode) return false;
+        if (!domain.equals(cacheKey.domain)) return false;
+        if (rrClass != cacheKey.rrClass) return false;
+        if (rrType != cacheKey.rrType) return false;
+        return true;
     }
 
-    public void handleClosed(final UdpChannel channel) {
-    }
-
-    public void handleReadable(final UdpChannel channel) {
-        
-    }
-
-    public void handleWritable(final UdpChannel channel) {
+    public int hashCode() {
+        return hashCode;
     }
 }

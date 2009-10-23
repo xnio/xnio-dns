@@ -34,4 +34,23 @@ public enum ResultCode {
     REFUSED,
     UNKNOWN,
     ;
+
+    /**
+     * Get the result code from its integer representation.  If the integer does not represent a known
+     * result code, then {@link #UNKNOWN} is returned.
+     *
+     * @param rcode the integer code
+     * @return the code
+     */
+    public static ResultCode fromInt(final int rcode) {
+        switch (rcode) {
+            case 0: return NOERROR;
+            case 1: return FORMAT_ERROR;
+            case 2: return SERVER_FAILURE;
+            case 3: return NAME_ERROR;
+            case 4: return NOT_IMPLEMENTED;
+            case 5: return REFUSED;
+            default: return UNKNOWN;
+        }
+    }
 }

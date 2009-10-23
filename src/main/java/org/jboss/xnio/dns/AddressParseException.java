@@ -25,7 +25,7 @@ package org.jboss.xnio.dns;
 /**
  * An address parse exception.  Thrown when a network address contains invalid characters or is improperly formatted.
  */
-public final class AddressParseException extends IllegalArgumentException {
+public class AddressParseException extends IllegalArgumentException {
 
     private static final long serialVersionUID = -8829167161458971075L;
 
@@ -68,44 +68,29 @@ public final class AddressParseException extends IllegalArgumentException {
         super(msg, cause);
     }
 
-    /**
-     * Constructs a <tt>DomainParseException</tt> with the specified detail message and position.
-     *
-     * @param msg the detail message
-     * @param position the character position, starting at 0
-     */
-    public AddressParseException(String msg, int position) {
-        super(msg);
-        setPosition(position);
-    }
-
-    private int position;
+    private String address;
 
     /**
-     * Get the position at which the error occurred.
+     * Set the address string that failed to parse.
      *
-     * @return the character position, starting at 0
+     * @param address the address string
      */
-    public int getPosition() {
-        return position;
-    }
-
-    /**
-     * Set the position at which the error occurred.
-     *
-     * @param position the character position, starting at 0
-     */
-    public void setPosition(final int position) {
-        this.position = position;
+    public void setAddress(final String address) {
+        this.address = address;
     }
 
     /** {@inheritDoc} */
     public String getMessage() {
         final String msg = super.getMessage();
-        if (msg != null && msg.length() > 0) {
-            return msg + " at position " + getPosition();
+        final String address = this.address;
+        if (address != null) {
+            if (msg != null) {
+                return msg + ": \"" + address + "\"";
+            } else {
+                return '"' + address + '"';
+            }
         } else {
-            return "Parse exception at position " + getPosition();
+            return msg;
         }
     }
 }

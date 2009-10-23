@@ -27,12 +27,12 @@ import org.jboss.xnio.FinishedIoFuture;
 import java.util.Set;
 
 /**
- * A resolver which returns no results
+ * A resolver which returns no results.
  */
 public final class EmptyResolver extends AbstractResolver {
 
     /** {@inheritDoc}  This implementation always returns an empty answer. */
     public IoFuture<Answer> resolve(final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
-        return new FinishedIoFuture<Answer>(new Answer(name, rrClass, rrType, ResultCode.NOERROR));
+        return new FinishedIoFuture<Answer>(Answer.builder().setQueryDomain(name).setQueryRRClass(rrClass).setQueryRRType(rrType).setResultCode(ResultCode.NOERROR).create());
     }
 }

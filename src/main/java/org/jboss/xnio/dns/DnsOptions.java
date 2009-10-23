@@ -22,33 +22,12 @@
 
 package org.jboss.xnio.dns;
 
-final class DomainRecordKey {
-    private final RRClass rrClass;
-    private final RRType rrType;
-    private final Domain domain;
-    private final int hashCode;
+import org.jboss.xnio.Option;
 
-    DomainRecordKey(final Domain domain, final RRClass rrClass, final RRType rrType) {
-        this.rrClass = rrClass;
-        this.rrType = rrType;
-        this.domain = domain;
-        int result = rrClass.hashCode();
-        result = 31 * result + rrType.hashCode();
-        result = 31 * result + domain.hashCode();
-        hashCode = result;
+public final class DnsOptions {
+
+    private DnsOptions() {
     }
 
-    public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (! (o instanceof DomainRecordKey)) return false;
-        final DomainRecordKey cacheKey = (DomainRecordKey) o;
-        if (!domain.equals(cacheKey.domain)) return false;
-        if (rrClass != cacheKey.rrClass) return false;
-        if (rrType != cacheKey.rrType) return false;
-        return true;
-    }
-
-    public int hashCode() {
-        return hashCode;
-    }
+    public static final Option<Integer> CACHE_SIZE = Option.simple(DnsOptions.class, "CACHE_SIZE", Integer.class);
 }

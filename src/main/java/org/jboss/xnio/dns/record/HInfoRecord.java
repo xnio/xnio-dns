@@ -27,6 +27,9 @@ import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.Domain;
 import org.jboss.xnio.dns.TTLSpec;
+import org.jboss.xnio.Buffers;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 
 /**
  * A record of type {@link RRType#HINFO}.
@@ -37,6 +40,23 @@ public class HInfoRecord extends Record {
 
     private final String cpu;
     private final String os;
+    private static final Charset LATIN_1 = Charset.forName("ISO-8859-1");
+
+    private static String readCharString(ByteBuffer buffer) {
+        return new String(Buffers.take(buffer, buffer.get() & 0xff), LATIN_1);
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordBuffer the buffer from which the record data should be built
+     */
+    public HInfoRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final ByteBuffer recordBuffer) {
+        this(name, rrClass, ttlSpec, readCharString(recordBuffer), readCharString(recordBuffer));
+    }
 
     /**
      * Construct a new instance.

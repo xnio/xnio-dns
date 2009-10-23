@@ -27,6 +27,7 @@ import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.Domain;
 import org.jboss.xnio.dns.TTLSpec;
+import java.nio.ByteBuffer;
 
 /**
  * A record of type {@link RRType#MX}.
@@ -42,13 +43,25 @@ public class MxRecord extends Record {
      * Construct a new instance.
      *
      * @param name the domain name
-     * @param rrclass the record class
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordBuffer the buffer from which the record data should be built
+     */
+    public MxRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final ByteBuffer recordBuffer) {
+        this(name, rrClass, ttlSpec, recordBuffer.getShort() & 0xffff, Domain.fromBytes(recordBuffer));
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrClass the record class
      * @param ttlSpec the TTL spec
      * @param preference the exchanger preference value
      * @param exchanger the exchanger domain
      */
-    public MxRecord(final Domain name, final RRClass rrclass, final TTLSpec ttlSpec, final int preference, final Domain exchanger) {
-        super(name, rrclass, RRType.MX, ttlSpec);
+    public MxRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final int preference, final Domain exchanger) {
+        super(name, rrClass, RRType.MX, ttlSpec);
         this.preference = preference;
         this.exchanger = exchanger;
     }

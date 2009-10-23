@@ -24,6 +24,9 @@ package org.jboss.xnio.dns;
 
 import java.io.IOException;
 
+/**
+ * An exception thrown by a DNS server.
+ */
 public final class DNSException extends IOException {
 
     private static final long serialVersionUID = 3313733955232311955L;

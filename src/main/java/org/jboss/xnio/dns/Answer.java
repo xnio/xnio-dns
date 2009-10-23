@@ -24,78 +24,174 @@ package org.jboss.xnio.dns;
 
 import java.util.List;
 import java.util.Collections;
+import java.util.Set;
+import java.util.ArrayList;
+import java.util.EnumSet;
 
 /**
  * A query answer.
  */
 public final class Answer {
     private final Domain queryDomain;
-    private final RRClass queryRrClass;
-    private final RRType queryRrType;
+    private final RRClass queryRRClass;
+    private final RRType queryRRType;
     private final ResultCode resultCode;
     private final List<Record> answerRecords;
     private final List<Record> authorityRecords;
     private final List<Record> additionalRecords;
+    private final Set<Flag> flags;
 
     private static List<Record> emptyList() {
         return Collections.emptyList();
     }
 
-    /**
-     * Construct a new instance with empty result record lists.
-     *
-     * @param queryDomain the query domain
-     * @param queryRrClass the query class
-     * @param queryRrType the query type
-     */
-    public Answer(final Domain queryDomain, final RRClass queryRrClass, final RRType queryRrType) {
-        this(queryDomain, queryRrClass, queryRrType, ResultCode.NOERROR, emptyList(), emptyList(), emptyList());
+    private static Set<Flag> emptySet() {
+        return Collections.emptySet();
     }
 
-    /**
-     * Construct a new instance with empty result record lists.
-     *
-     * @param queryDomain the query domain
-     * @param queryRrClass the query class
-     * @param queryRrType the query type
-     * @param resultCode the result code
-     */
-    public Answer(final Domain queryDomain, final RRClass queryRrClass, final RRType queryRrType, final ResultCode resultCode) {
-        this(queryDomain, queryRrClass, queryRrType, resultCode, emptyList(), emptyList(), emptyList());
-    }
-
-    /**
-     * Construct a new instance.
-     *
-     * @param queryDomain the query domain
-     * @param queryRrClass the query class
-     * @param queryRrType the query type
-     * @param resultCode the result code
-     * @param answerRecords the answer record list (should be immutable)
-     */
-    public Answer(final Domain queryDomain, final RRClass queryRrClass, final RRType queryRrType, final ResultCode resultCode, final List<Record> answerRecords) {
-        this(queryDomain, queryRrClass, queryRrType, resultCode, answerRecords, emptyList(), emptyList());
-    }
-
-    /**
-     * Construct a new instance.
-     *
-     * @param queryDomain the query domain
-     * @param queryRrClass the query class
-     * @param queryRrType the query type
-     * @param resultCode the result code
-     * @param answerRecords the answer record list (should be immutable)
-     * @param authorityRecords the authority record list (should be immutable)
-     * @param additionalRecords the additional record list (should be immutable)
-     */
-    public Answer(final Domain queryDomain, final RRClass queryRrClass, final RRType queryRrType, final ResultCode resultCode, final List<Record> answerRecords, final List<Record> authorityRecords, final List<Record> additionalRecords) {
+    private Answer(final Domain queryDomain, final RRClass queryRRClass, final RRType queryRRType, final ResultCode resultCode, final List<Record> answerRecords, final List<Record> authorityRecords, final List<Record> additionalRecords, final Set<Flag> flags) {
         this.queryDomain = queryDomain;
-        this.queryRrClass = queryRrClass;
-        this.queryRrType = queryRrType;
+        this.queryRRClass = queryRRClass;
+        this.queryRRType = queryRRType;
         this.resultCode = resultCode;
         this.answerRecords = answerRecords;
         this.authorityRecords = authorityRecords;
         this.additionalRecords = additionalRecords;
+        this.flags = flags;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
+        private Domain queryDomain;
+        private RRClass queryRRClass;
+        private RRType queryRRType;
+        private ResultCode resultCode;
+        private List<Record> answerRecords;
+        private List<Record> authorityRecords;
+        private List<Record> additionalRecords;
+        private Set<Flag> flags;
+
+        public Builder setAnswerRecords(List<Record> list) {
+            answerRecords = copy(list);
+            return this;
+        }
+
+        public Builder setAuthorityRecords(List<Record> list) {
+            authorityRecords = copy(list);
+            return this;
+        }
+
+        public Builder setAdditionalRecords(List<Record> list) {
+            additionalRecords = copy(list);
+            return this;
+        }
+
+        public Builder setHeaderInfo(Answer original) {
+            queryDomain = original.queryDomain;
+            queryRRClass = original.queryRRClass;
+            queryRRType = original.queryRRType;
+            resultCode = original.resultCode;
+            return this;
+        }
+
+        public Builder setHeaderInfo(Domain queryDomain, RRClass queryRRClass, RRType queryRRType, ResultCode resultCode) {
+            this.queryDomain = queryDomain;
+            this.queryRRClass = queryRRClass;
+            this.queryRRType = queryRRType;
+            this.resultCode = resultCode;
+            return this;
+        }
+
+        public Builder setAll(Answer original) {
+            setHeaderInfo(original);
+            setAnswerRecords(original.answerRecords);
+            setAuthorityRecords(original.authorityRecords);
+            setAdditionalRecords(original.additionalRecords);
+            return this;
+        }
+
+        private static List<Record> copy(List<Record> orig) {
+            if (orig.isEmpty()) {
+                return null;
+            }
+            final ArrayList<Record> list = new ArrayList<Record>(orig.size());
+            for (Record record : orig) {
+                if (record == null) {
+                    throw new IllegalArgumentException("Null record in original list");
+                }
+                list.add(record);
+            }
+            return list;
+        }
+
+        public Builder setQueryDomain(Domain queryDomain) {
+            this.queryDomain = queryDomain;
+            return this;
+        }
+
+        public Builder setQueryRRClass(RRClass rrClass) {
+            queryRRClass = rrClass;
+            return this;
+        }
+
+        public Builder setQueryRRType(RRType rrType) {
+            queryRRType = rrType;
+            return this;
+        }
+
+        public Builder setResultCode(ResultCode resultCode) {
+            this.resultCode = resultCode;
+            return this;
+        }
+
+        public Builder addAnswerRecord(Record record) {
+            if (answerRecords == null) {
+                answerRecords = new ArrayList<Record>();
+            }
+            answerRecords.add(record);
+            return this;
+        }
+
+        public Builder addAuthorityRecord(Record record) {
+            if (authorityRecords == null) {
+                authorityRecords = new ArrayList<Record>();
+            }
+            authorityRecords.add(record);
+            return this;
+        }
+
+        public Builder addAdditionalRecord(Record record) {
+            if (additionalRecords == null) {
+                additionalRecords = new ArrayList<Record>();
+            }
+            additionalRecords.add(record);
+            return this;
+        }
+
+        public Builder addFlag(Flag flag) {
+            if (flags == null) {
+                flags = EnumSet.of(flag);
+            } else {
+                flags.add(flag);
+            }
+            return this;
+        }
+
+        public Answer create() {
+            return new Answer(
+                    queryDomain,
+                    queryRRClass,
+                    queryRRType, 
+                    resultCode, 
+                    answerRecords == null ? emptyList() : Collections.unmodifiableList(answerRecords),
+                    authorityRecords == null ? emptyList() : Collections.unmodifiableList(authorityRecords),
+                    additionalRecords == null ? emptyList() : Collections.unmodifiableList(additionalRecords),
+                    flags == null ? emptySet() : Collections.unmodifiableSet(flags)
+            );
+        }
     }
 
     /**
@@ -112,8 +208,8 @@ public final class Answer {
      *
      * @return the query class
      */
-    public RRClass getQueryRrClass() {
-        return queryRrClass;
+    public RRClass getQueryRRClass() {
+        return queryRRClass;
     }
 
     /**
@@ -121,8 +217,8 @@ public final class Answer {
      *
      * @return the query type
      */
-    public RRType getQueryRrType() {
-        return queryRrType;
+    public RRType getQueryRRType() {
+        return queryRRType;
     }
 
     /**
@@ -159,5 +255,21 @@ public final class Answer {
      */
     public List<Record> getAdditionalRecords() {
         return additionalRecords;
+    }
+
+    /**
+     * Get the answer flags.
+     *
+     * @return the answer flag set
+     */
+    public Set<Flag> getFlags() {
+        return flags;
+    }
+
+    public enum Flag {
+        AUTHORATIVE,
+        TRUNCATED,
+        RECURSION_DESIRED,
+        RECURSION_AVAILABLE,
     }
 }

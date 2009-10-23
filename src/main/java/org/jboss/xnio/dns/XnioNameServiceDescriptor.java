@@ -22,27 +22,41 @@
 
 package org.jboss.xnio.dns;
 
-import java.net.InetAddress;
-import java.net.SocketAddress;
+import sun.net.spi.nameservice.NameServiceDescriptor;
+import sun.net.spi.nameservice.NameService;
 
 /**
- * A resolver which can query an external server.
+ * A name service descriptor which specifies the "xnio" DNS service.  This class is not intended to be
+ * instantiated directly by user code.
+ *
+ * @apiviz.exclude
  */
-public interface NetworkResolver {
+public final class XnioNameServiceDescriptor implements NameServiceDescriptor {
 
     /**
-     * Get a resolver to communicate with the given server.
+     * Create a name service for this descriptor.
      *
-     * @param server the server to communicate with
-     * @return the resolver
+     * @return the name service
      */
-    Resolver resolverFor(InetAddress server);
+    public NameService createNameService() {
+        return new XnioNameService();
+    }
 
     /**
-     * Get a resolver to communicate with the given server.
+     * Get the provider name.
      *
-     * @param server the server to communicate with
-     * @return the resolver
+     * @return the string "xnio"
      */
-    Resolver resolverFor(SocketAddress server);
+    public String getProviderName() {
+        return "xnio";
+    }
+
+    /**
+     * Get the provider type.
+     *
+     * @return the string "dns"
+     */
+    public String getType() {
+        return "dns";
+    }
 }

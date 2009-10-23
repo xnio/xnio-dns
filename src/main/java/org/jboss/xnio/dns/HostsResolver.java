@@ -33,7 +33,6 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.jboss.xnio.FinishedIoFuture;
@@ -67,7 +66,12 @@ public final class HostsResolver extends AbstractResolver {
             final String[] parts = line.split("\\s++");
             final int len = parts.length;
             if (len >= 1) {
-                
+                String address = parts[0];
+                for (int i = 1; i < len; i ++) {
+                    final String hostName = parts[i];
+                    final Domain domain = Domain.fromString(hostName);
+                    hostsMap.put(domain, DNS.parseAddress(domain.getHostName(), address));
+                }
             }
         }
         this.hostsMap = hostsMap;
@@ -78,6 +82,7 @@ public final class HostsResolver extends AbstractResolver {
      *
      * @param source the hosts file source
      * @throws IOException if an I/O error occurs
+     * @throws AddressParseException if an IP address in the hosts file was invalid
      */
     public void initialize(Reader source) throws IOException {
         if (source instanceof BufferedReader) {
@@ -116,22 +121,22 @@ public final class HostsResolver extends AbstractResolver {
      * the next resolver in the chain.
      */
     public IoFuture<Answer> resolve(final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
-        if (rrClass == RRClass.IN) {
-            if (rrType == RRType.A) {
-                final InetAddress address = hostsMap.get(name);
+        if (rrClass == RRClass.IN || rrClass == RRClass.ANY) {
+            final InetAddress address = hostsMap.get(name);
+            if (rrType == RRType.A || rrType == RRType.ANY) {
                 if (address instanceof Inet4Address) {
-                    final Answer answer = new Answer(name, rrClass, rrType, ResultCode.NOERROR);
-                    final List<Record> records = answer.getAnswerRecords();
-                    records.add(new ARecord(name, TTLSpec.ZERO, (Inet4Address) address));
-                    return new FinishedIoFuture<Answer>(answer);
+                    final Answer.Builder builder = Answer.builder();
+                    builder.setQueryDomain(name).setQueryRRClass(rrClass).setQueryRRType(rrType).setResultCode(ResultCode.NOERROR);
+                    builder.addAnswerRecord(new ARecord(name, TTLSpec.ZERO, (Inet4Address) address));
+                    return new FinishedIoFuture<Answer>(builder.create());
                 }
-            } else if (rrType == RRType.AAAA) {
-                final InetAddress address = hostsMap.get(name);
+            }
+            if (rrType == RRType.AAAA || rrType == RRType.ANY) {
                 if (address instanceof Inet6Address) {
-                    final Answer answer = new Answer(name, rrClass, rrType, ResultCode.NOERROR);
-                    final List<Record> records = answer.getAnswerRecords();
-                    records.add(new AaaaRecord(name, TTLSpec.ZERO, (Inet6Address) address));
-                    return new FinishedIoFuture<Answer>(answer);
+                    final Answer.Builder builder = Answer.builder();
+                    builder.setQueryDomain(name).setQueryRRClass(rrClass).setQueryRRType(rrType).setResultCode(ResultCode.NOERROR);
+                    builder.addAnswerRecord(new AaaaRecord(name, TTLSpec.ZERO, (Inet6Address) address));
+                    return new FinishedIoFuture<Answer>(builder.create());
                 }
             }
         }

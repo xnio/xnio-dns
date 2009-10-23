@@ -27,6 +27,7 @@ import org.jboss.xnio.dns.Domain;
 import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.TTLSpec;
+import java.nio.ByteBuffer;
 
 /**
  * A record of type {@link RRType#SOA}.
@@ -99,6 +100,25 @@ public class SoaRecord extends Record {
      */
     public SoaRecord(final Domain name, final Domain mName, final Domain rName, final int serial, final int refresh, final int retry, final int expire, final TTLSpec minimum) {
         this(name, RRClass.IN, TTLSpec.ZERO, mName, rName, serial, refresh, retry, expire, minimum);
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordBuffer the buffer from which the record data should be built
+     */
+    public SoaRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final ByteBuffer recordBuffer) {
+        super(name, rrClass, RRType.SOA, ttlSpec);
+        mName = Domain.fromBytes(recordBuffer);
+        rName = Domain.fromBytes(recordBuffer);
+        serial = recordBuffer.getInt();
+        refresh = recordBuffer.getInt();
+        retry = recordBuffer.getInt();
+        expire = recordBuffer.getInt();
+        minimum = TTLSpec.createFixed(recordBuffer.getInt());
     }
 
     /**

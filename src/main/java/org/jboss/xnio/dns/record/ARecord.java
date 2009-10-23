@@ -23,11 +23,15 @@
 package org.jboss.xnio.dns.record;
 
 import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import org.jboss.xnio.dns.Record;
 import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.Domain;
 import org.jboss.xnio.dns.TTLSpec;
+import org.jboss.xnio.Buffers;
 
 /**
  * A record of type {@link RRType#A}.
@@ -37,6 +41,25 @@ public class ARecord extends Record {
     private static final long serialVersionUID = -2685055677791879066L;
 
     private final Inet4Address address;
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordBuffer the buffer from which the record data should be built
+     */
+    public ARecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final ByteBuffer recordBuffer) {
+        super(name, rrClass, RRType.A, ttlSpec);
+        byte[] bytes = Buffers.take(recordBuffer, 4);
+        try {
+            address = (Inet4Address) InetAddress.getByAddress(name.toString(), bytes);
+        } catch (UnknownHostException e) {
+            // not possible
+            throw new IllegalStateException(e);
+        }
+    }
 
     /**
      * Construct a new instance.

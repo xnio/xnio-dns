@@ -27,6 +27,7 @@ import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.Domain;
 import org.jboss.xnio.dns.TTLSpec;
+import java.nio.ByteBuffer;
 
 /**
  * A record of type {@link org.jboss.xnio.dns.RRType#NS}.
@@ -69,6 +70,18 @@ public class NsRecord extends Record {
      */
     public NsRecord(final Domain name, final Domain server) {
         this(name, TTLSpec.ZERO, server);
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordBuffer the buffer from which the record data should be built
+     */
+    public NsRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final ByteBuffer recordBuffer) {
+        this(name, rrClass, ttlSpec, Domain.fromBytes(recordBuffer));
     }
 
     /**

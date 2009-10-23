@@ -26,6 +26,7 @@ package org.jboss.xnio.dns;
  *
  */
 public enum RRClass {
+    UNKNOWN(-1),
     IN(1),
     CH(3),
     HS(4),
@@ -40,7 +41,16 @@ public enum RRClass {
 
     public int getId() {
         return id;
-        
     }
 
+    public static RRClass fromInt(final int i) {
+        switch (i) {
+            case 1: return IN;
+            case 3: return CH;
+            case 4: return HS;
+            case 254: return NONE;
+            case 255: return ANY;
+            default: return UNKNOWN;
+        }
+    }
 }

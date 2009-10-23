@@ -27,41 +27,73 @@ import org.jboss.xnio.dns.Domain;
 import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.TTLSpec;
+import org.jboss.xnio.Buffers;
+import java.nio.ByteBuffer;
 
 /**
- * A record of type {@link RRType#ANY}.
+ * A record of unknown type.
  */
-public class AnyRecord extends Record {
+public class UnknownRecord extends Record {
 
     private static final long serialVersionUID = -1357005801530421627L;
+
+    private final byte[] data;
 
     /**
      * Construct a new instance.
      *
      * @param name the domain name
      * @param rrClass the record class
+     * @param rrType the record type
      * @param ttlSpec the TTL spec
+     * @param data the raw data
      */
-    public AnyRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec) {
-        super(name, rrClass, RRType.ANY, ttlSpec);
+    public UnknownRecord(final Domain name, final RRClass rrClass, final RRType rrType, final TTLSpec ttlSpec, final byte[] data) {
+        super(name, rrClass, rrType, ttlSpec);
+        this.data = data;
     }
 
     /**
      * Construct a new instance.
      *
      * @param name the domain name
+     * @param rrType the record type
      * @param ttlSpec the TTL spec
+     * @param data the raw data
      */
-    public AnyRecord(final Domain name, final TTLSpec ttlSpec) {
-        this(name, RRClass.IN, ttlSpec);
+    public UnknownRecord(final Domain name, final RRType rrType, final TTLSpec ttlSpec, final byte[] data) {
+        this(name, RRClass.IN, rrType, ttlSpec, data);
     }
 
     /**
      * Construct a new instance.
      *
      * @param name the domain name
+     * @param rrType the record type
+     * @param data the raw data
      */
-    public AnyRecord(final Domain name) {
-        this(name, TTLSpec.ZERO);
+    public UnknownRecord(final Domain name, final RRType rrType, final byte[] data) {
+        this(name, rrType, TTLSpec.ZERO, data);
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrClass the record class
+     * @param rrType the record type
+     * @param ttlSpec the TTL spec
+     * @param recordBuffer the buffer from which this record's RDATA should be built
+     */
+    public UnknownRecord(final Domain name, final RRClass rrClass, final RRType rrType, final TTLSpec ttlSpec, final ByteBuffer recordBuffer) {
+        super(name, rrClass, rrType, ttlSpec);
+        data = Buffers.take(recordBuffer, recordBuffer.remaining());
+    }
+
+    /** {@inheritDoc} */
+    protected void appendRData(final StringBuilder builder) {
+        for (byte b : data) {
+            builder.append(' ').append(Integer.toHexString(b & 0xff));
+        }
     }
 }

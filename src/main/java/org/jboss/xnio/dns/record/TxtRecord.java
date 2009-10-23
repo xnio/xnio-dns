@@ -27,6 +27,7 @@ import org.jboss.xnio.dns.Domain;
 import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.TTLSpec;
+import java.nio.ByteBuffer;
 
 /**
  * A record of type {@link RRType#TXT}.
@@ -69,6 +70,26 @@ public class TxtRecord extends Record {
      */
     public TxtRecord(final Domain name, final String text) {
         this(name, TTLSpec.ZERO, text);
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordBuffer the buffer from which the record data should be built
+     */
+    public TxtRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final ByteBuffer recordBuffer) {
+        super(name, rrClass, RRType.TXT, ttlSpec);
+        final StringBuilder builder = new StringBuilder(recordBuffer.remaining());
+        while (recordBuffer.hasRemaining()) {
+            for (int len = recordBuffer.get() & 0xff; len >= 0; len --) {
+                // Latin-1
+                builder.append((char) recordBuffer.get());
+            }
+        }
+        text = builder.toString();
     }
 
     /**
