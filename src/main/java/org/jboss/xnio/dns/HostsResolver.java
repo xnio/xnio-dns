@@ -70,7 +70,7 @@ public final class HostsResolver extends AbstractResolver {
                 for (int i = 1; i < len; i ++) {
                     final String hostName = parts[i];
                     final Domain domain = Domain.fromString(hostName);
-                    hostsMap.put(domain, DNS.parseAddress(domain.getHostName(), address));
+                    hostsMap.put(domain, DNS.parseInetAddress(domain.getHostName(), address));
                 }
             }
         }

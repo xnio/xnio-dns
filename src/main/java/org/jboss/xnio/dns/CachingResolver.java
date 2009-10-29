@@ -23,6 +23,7 @@
 package org.jboss.xnio.dns;
 
 import org.jboss.xnio.IoFuture;
+import org.jboss.xnio.FutureResult;
 import java.util.Set;
 import java.util.Map;
 import java.util.LinkedHashMap;
@@ -31,12 +32,12 @@ import java.io.IOException;
 
 public final class CachingResolver extends AbstractResolver implements Resolver {
 
-    private final Map<QueryKey, IoFuture.Manager<Answer>> cache;
+    private final Map<QueryKey, FutureResult<Answer>> cache;
     private final Resolver realResolver;
     private final Executor executor;
 
     public CachingResolver(final Resolver resolver, final Executor executor, final int cacheSize) {
-        cache = new CacheMap<QueryKey, IoFuture.Manager<Answer>>(cacheSize);
+        cache = new CacheMap<QueryKey, FutureResult<Answer>>(cacheSize);
         realResolver = resolver;
         this.executor = executor;
     }
@@ -48,9 +49,9 @@ public final class CachingResolver extends AbstractResolver implements Resolver 
             return realResolver.resolve(name, rrClass, rrType, flags);
         } else {
             final QueryKey key = new QueryKey(name, rrClass, rrType);
-            final IoFuture.Manager<Answer> newAnswer;
+            final FutureResult<Answer> newAnswer;
             synchronized (cache) {
-                final IoFuture.Manager<Answer> future = cache.get(key);
+                final FutureResult<Answer> future = cache.get(key);
                 if (future != null) {
                     final IoFuture.Status status = future.getIoFuture().getStatus();
                     if (status == IoFuture.Status.WAITING) {
@@ -74,21 +75,21 @@ public final class CachingResolver extends AbstractResolver implements Resolver 
                         }
                     }
                 }
-                newAnswer = new IoFuture.Manager<Answer>(executor);
+                newAnswer = new FutureResult<Answer>(executor);
                 cache.put(key, newAnswer);
             }
             final IoFuture<Answer> realFuture = realResolver.resolve(name, rrClass, rrType, flags);
-            realFuture.addNotifier(new IoFuture.HandlingNotifier<Answer, IoFuture.Manager<Answer>>() {
-                public void handleCancelled(final IoFuture.Manager<Answer> attachment) {
+            realFuture.addNotifier(new IoFuture.HandlingNotifier<Answer, FutureResult<Answer>>() {
+                public void handleCancelled(final FutureResult<Answer> attachment) {
                     synchronized (cache) {
                         if (cache.get(key).equals(attachment)) {
                             cache.remove(key);
                         }
                     }
-                    attachment.finishCancel();
+                    attachment.setCancelled();
                 }
 
-                public void handleFailed(final IOException exception, final IoFuture.Manager<Answer> attachment) {
+                public void handleFailed(final IOException exception, final FutureResult<Answer> attachment) {
                     synchronized (cache) {
                         if (cache.get(key).equals(attachment)) {
                             cache.remove(key);
@@ -97,7 +98,7 @@ public final class CachingResolver extends AbstractResolver implements Resolver 
                     attachment.setException(exception);
                 }
 
-                public void handleDone(final Answer result, final IoFuture.Manager<Answer> attachment) {
+                public void handleDone(final Answer result, final FutureResult<Answer> attachment) {
                     attachment.setResult(result);
                 }
             }, newAnswer);

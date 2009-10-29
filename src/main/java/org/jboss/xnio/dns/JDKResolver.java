@@ -24,6 +24,7 @@ package org.jboss.xnio.dns;
 
 import org.jboss.xnio.IoFuture;
 import org.jboss.xnio.FinishedIoFuture;
+import org.jboss.xnio.FutureResult;
 import org.jboss.xnio.dns.record.PtrRecord;
 import org.jboss.xnio.dns.record.ARecord;
 import org.jboss.xnio.dns.record.AaaaRecord;
@@ -62,18 +63,18 @@ public final class JDKResolver extends AbstractResolver {
         }
         final Answer.Builder builder = Answer.builder();
         builder.setHeaderInfo(name, rrClass, rrType, ResultCode.UNKNOWN);
-        final IoFuture.Manager<Answer> answerManager = new IoFuture.Manager<Answer>();
+        final FutureResult<Answer> answerManager = new FutureResult<Answer>();
         queryExecutor.execute(new QueryTask(answerManager, builder, name));
         return answerManager.getIoFuture();
     }
 
     private static class QueryTask implements Runnable {
 
-        private final IoFuture.Manager<Answer> answerManager;
+        private final FutureResult<Answer> answerManager;
         private final Answer.Builder builder;
         private final Domain name;
 
-        public QueryTask(final IoFuture.Manager<Answer> answerManager, final Answer.Builder builder, final Domain name) {
+        public QueryTask(final FutureResult<Answer> answerManager, final Answer.Builder builder, final Domain name) {
             this.answerManager = answerManager;
             this.builder = builder;
             this.name = name;

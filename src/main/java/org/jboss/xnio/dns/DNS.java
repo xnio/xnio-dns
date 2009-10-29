@@ -41,7 +41,7 @@ public final class DNS {
      * @return the address
      * @throws AddressParseException if the address string is not a valid IP address
      */
-    public InetAddress parseInetAddress(String hostName, String addressString) throws AddressParseException {
+    public static InetAddress parseInetAddress(String hostName, String addressString) throws AddressParseException {
         return IPParserImpl.parseAddress(IPParserImpl.Kind.IP, hostName, addressString);
     }
 
@@ -53,7 +53,7 @@ public final class DNS {
      * @return the address
      * @throws AddressParseException if the address string is not a valid IPv4 address
      */
-    public Inet4Address parseInet4Address(String hostName, String addressString) throws AddressParseException {
+    public static Inet4Address parseInet4Address(String hostName, String addressString) throws AddressParseException {
         return (Inet4Address) IPParserImpl.parseAddress(IPParserImpl.Kind.IPv4, hostName, addressString);
     }
 
@@ -65,7 +65,7 @@ public final class DNS {
      * @return the address
      * @throws AddressParseException if the address string is not a valid IPv6 address
      */
-    public Inet6Address parseInet6Address(String hostName, String addressString) throws AddressParseException {
+    public static Inet6Address parseInet6Address(String hostName, String addressString) throws AddressParseException {
         return (Inet6Address) IPParserImpl.parseAddress(IPParserImpl.Kind.IPv6, hostName, addressString);
     }
 }

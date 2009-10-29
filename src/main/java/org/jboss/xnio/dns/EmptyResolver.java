@@ -31,8 +31,26 @@ import java.util.Set;
  */
 public final class EmptyResolver extends AbstractResolver {
 
+    private final ResultCode resultCode;
+
+    /**
+     * Create a new instance.
+     *
+     * @param resultCode the result code to return
+     */
+    public EmptyResolver(final ResultCode resultCode) {
+        this.resultCode = resultCode;
+    }
+
+    /**
+     * Create a new instance with a result code of {@link ResultCode#NOERROR}.
+     */
+    public EmptyResolver() {
+        this(ResultCode.NOERROR);
+    }
+
     /** {@inheritDoc}  This implementation always returns an empty answer. */
     public IoFuture<Answer> resolve(final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
-        return new FinishedIoFuture<Answer>(Answer.builder().setQueryDomain(name).setQueryRRClass(rrClass).setQueryRRType(rrType).setResultCode(ResultCode.NOERROR).create());
+        return new FinishedIoFuture<Answer>(Answer.builder().setQueryDomain(name).setQueryRRClass(rrClass).setQueryRRType(rrType).setResultCode(resultCode).create());
     }
 }
