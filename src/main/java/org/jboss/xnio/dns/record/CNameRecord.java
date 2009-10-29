@@ -54,6 +54,18 @@ public class CNameRecord extends Record {
      * Construct a new instance.
      *
      * @param name the domain name
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordString the string from which the record data should be built
+     */
+    public CNameRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final String recordString) {
+        this(name, rrClass, ttlSpec, Domain.fromString(recordString));
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
      * @param rrclass the record class
      * @param ttlSpec the TTL spec
      * @param cname the destination domain name

@@ -31,6 +31,7 @@ import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.Domain;
 import org.jboss.xnio.dns.TTLSpec;
+import org.jboss.xnio.dns.DNS;
 import org.jboss.xnio.Buffers;
 
 /**
@@ -50,7 +51,7 @@ public class AaaaRecord extends Record {
      * @param recordBuffer the buffer from which the record data should be built
      */
     public AaaaRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final ByteBuffer recordBuffer) {
-        super(name, rrClass, RRType.A, ttlSpec);
+        super(name, rrClass, RRType.AAAA, ttlSpec);
         byte[] bytes = Buffers.take(recordBuffer, 16);
         try {
             address = (Inet6Address) InetAddress.getByAddress(name.toString(), bytes);
@@ -58,6 +59,19 @@ public class AaaaRecord extends Record {
             // not possible
             throw new IllegalStateException(e);
         }
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordString the string from which the record data should be built
+     */
+    public AaaaRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final String recordString) {
+        super(name, rrClass, RRType.AAAA, ttlSpec);
+        address = DNS.parseInet6Address(name.getHostName(), recordString);
     }
 
     /**

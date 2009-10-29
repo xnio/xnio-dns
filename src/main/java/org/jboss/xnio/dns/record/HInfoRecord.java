@@ -62,6 +62,24 @@ public class HInfoRecord extends Record {
      * Construct a new instance.
      *
      * @param name the domain name
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordString the string from which the record data should be built
+     */
+    public HInfoRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final String recordString) {
+        super(name, rrClass, RRType.HINFO, ttlSpec);
+        final int spc = recordString.indexOf(' ');
+        if (spc == -1) {
+            throw new IllegalArgumentException("Invalid record data format");
+        }
+        cpu = recordString.substring(0, spc);
+        os = recordString.substring(spc).trim();
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
      * @param rrClass the record class
      * @param ttlSpec the TTL spec
      * @param cpu the CPU type

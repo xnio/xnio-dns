@@ -31,6 +31,7 @@ import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.Domain;
 import org.jboss.xnio.dns.TTLSpec;
+import org.jboss.xnio.dns.DNS;
 import org.jboss.xnio.Buffers;
 
 /**
@@ -59,6 +60,19 @@ public class ARecord extends Record {
             // not possible
             throw new IllegalStateException(e);
         }
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordString the string from which the record data should be built
+     */
+    public ARecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final String recordString) {
+        super(name, rrClass, RRType.A, ttlSpec);
+        address = DNS.parseInet4Address(name.getHostName(), recordString);
     }
 
     /**

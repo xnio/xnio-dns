@@ -55,6 +55,24 @@ public class MxRecord extends Record {
      * Construct a new instance.
      *
      * @param name the domain name
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordString the string from which the record data should be built
+     */
+    public MxRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final String recordString) {
+        super(name, rrClass, RRType.MX, ttlSpec);
+        final int spc = recordString.indexOf(' ');
+        if (spc == -1) {
+            throw new IllegalArgumentException("Invalid record data format");
+        }
+        preference = Integer.parseInt(recordString.substring(0, spc));
+        exchanger = Domain.fromString(recordString.substring(spc).trim());
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
      * @param rrClass the record class
      * @param ttlSpec the TTL spec
      * @param preference the exchanger preference value

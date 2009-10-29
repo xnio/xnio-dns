@@ -45,10 +45,73 @@ public class TxtRecord extends Record {
      * @param rrClass the resource record class
      * @param ttlSpec the TTL spec
      * @param text the text data
+     * @param parseArg
      */
-    public TxtRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final String text) {
+    public TxtRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final String text, final boolean parseArg) {
         super(name, rrClass, RRType.TXT, ttlSpec);
-        this.text = text;
+        if (parseArg) {
+            final int len = text.length();
+            final StringBuilder builder = new StringBuilder(len);
+            boolean in = false;
+            for (int i = 0; i < len; i ++) {
+                final char ch = text.charAt(i);
+                switch (ch) {
+                    case '"': in = !in; break;
+                    case '\\': if (in) {
+                        if (i == len - 1) {
+                            throw new IllegalArgumentException("Unexpected end of string");
+                        }
+                        switch (text.charAt(++i)) {
+                            case '\\': builder.append('\\'); break;
+                            case 'n': builder.append('\n'); break;
+                            case 'f': builder.append('\f'); break;
+                            case 't': builder.append('\t'); break;
+                            case 'r': builder.append('\r'); break;
+                            case 'b': builder.append('\b'); break;
+                            case '"': builder.append('"'); break;
+                            case '0': builder.append('\0'); break;
+                            case 'x': builder.append(Integer.parseInt(text.substring(i + 1, i + 3), 16)); i += 2; break;
+                            default: throw invalidChar();
+                        }
+                        break;
+                    } else {
+                        throw invalidChar();
+                    }
+                    case ' ': {
+                        if (in) {
+                            builder.append(' ');
+                        }
+                        break;
+                    }
+                    case '\t':
+                    case '\n':
+                    case '\r':
+                    case '\f': {
+                        if (in) {
+                            throw invalidChar();
+                        }
+                        break;
+                    }
+                    default: {
+                        builder.append(ch);
+                        if (Character.isISOControl(ch) || ! in) {
+                            throw invalidChar();
+                        }
+                        break;
+                    }
+                }
+            }
+            if (in) {
+                throw new IllegalArgumentException("Unexpected end of string");
+            }
+            this.text = builder.toString();
+        } else {
+            this.text = text;
+        }
+    }
+
+    private static IllegalArgumentException invalidChar() {
+        return new IllegalArgumentException("Invalid character");
     }
 
     /**
@@ -59,7 +122,7 @@ public class TxtRecord extends Record {
      * @param text the text data
      */
     public TxtRecord(final Domain name, final TTLSpec ttlSpec, final String text) {
-        this(name, RRClass.IN, ttlSpec, text);
+        this(name, RRClass.IN, ttlSpec, text, false);
     }
 
     /**
@@ -101,8 +164,46 @@ public class TxtRecord extends Record {
         return text;
     }
 
+    /**
+     * Get the deparsed text in a form suitable for writing to a file.
+     *
+     * @return the deparsed text
+     */
+    public String getDeparsedText() {
+        final String text = this.text;
+        final int len = text.length();
+        final StringBuilder builder = new StringBuilder(len + 2);
+        builder.append('"');
+        for (int i = 0; i < len; i ++) {
+            final char ch = text.charAt(i);
+            switch (ch) {
+                case '"': builder.append('\\').append('"'); break;
+                case '\\': builder.append('\\').append('\\'); break;
+                case '\b': builder.append('\\').append('b'); break;
+                case '\r': builder.append('\\').append('r'); break;
+                case '\n': builder.append('\\').append('n'); break;
+                case '\t': builder.append('\\').append('t'); break;
+                case '\f': builder.append('\\').append('f'); break;
+                case '\0': builder.append('\\').append('0'); break;
+                default: if (Character.isISOControl(ch)) {
+                    if (ch < 16) {
+                        builder.append("\\x0").append(Integer.toHexString((int)ch));
+                    } else if (ch < 256) {
+                        builder.append("\\x").append(Integer.toHexString((int)ch));
+                    } else {
+                        builder.append('\\').append('?');
+                    }
+                } else {
+                    builder.append(ch);
+                }
+            }
+        }
+        builder.append('"');
+        return builder.toString();
+    }
+
     /** {@inheritDoc} */
     protected void appendRData(final StringBuilder builder) {
-        builder.append(' ').append('"').append(text.replace("\\", "\\\\").replace("\"", "\\\"")).append('"');
+        builder.append(' ').append(getDeparsedText());
     }
 }

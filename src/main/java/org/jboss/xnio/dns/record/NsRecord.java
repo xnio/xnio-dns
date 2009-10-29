@@ -42,6 +42,30 @@ public class NsRecord extends Record {
      * Construct a new instance.
      *
      * @param name the domain name
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordBuffer the buffer from which the record data should be built
+     */
+    public NsRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final ByteBuffer recordBuffer) {
+        this(name, rrClass, ttlSpec, Domain.fromBytes(recordBuffer));
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordString the string from which the record data should be built
+     */
+    public NsRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final String recordString) {
+        this(name, rrClass, ttlSpec, Domain.fromString(recordString));
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
      * @param rrclass the record class
      * @param ttlSpec the TTL spec
      * @param server the name server domain
@@ -70,18 +94,6 @@ public class NsRecord extends Record {
      */
     public NsRecord(final Domain name, final Domain server) {
         this(name, TTLSpec.ZERO, server);
-    }
-
-    /**
-     * Construct a new instance.
-     *
-     * @param name the domain name
-     * @param rrClass the resource record class
-     * @param ttlSpec the TTL spec
-     * @param recordBuffer the buffer from which the record data should be built
-     */
-    public NsRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final ByteBuffer recordBuffer) {
-        this(name, rrClass, ttlSpec, Domain.fromBytes(recordBuffer));
     }
 
     /**

@@ -28,6 +28,8 @@ import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.TTLSpec;
 import java.nio.ByteBuffer;
+import java.util.StringTokenizer;
+import java.util.NoSuchElementException;
 
 /**
  * A record of type {@link RRType#SOA}.
@@ -43,6 +45,49 @@ public class SoaRecord extends Record {
     private final int retry;
     private final int expire;
     private final TTLSpec minimum;
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordBuffer the buffer from which the record data should be built
+     */
+    public SoaRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final ByteBuffer recordBuffer) {
+        super(name, rrClass, RRType.SOA, ttlSpec);
+        mName = Domain.fromBytes(recordBuffer);
+        rName = Domain.fromBytes(recordBuffer);
+        serial = recordBuffer.getInt();
+        refresh = recordBuffer.getInt();
+        retry = recordBuffer.getInt();
+        expire = recordBuffer.getInt();
+        minimum = TTLSpec.createFixed(recordBuffer.getInt());
+    }
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordString the buffer from which the record data should be built
+     */
+    public SoaRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final String recordString) {
+        super(name, rrClass, RRType.SOA, ttlSpec);
+        final StringTokenizer tok = new StringTokenizer(recordString, " \t\n\r\f", false);
+        try {
+            mName = Domain.fromString(tok.nextToken());
+            rName = Domain.fromString(tok.nextToken());
+            serial = Integer.parseInt(tok.nextToken());
+            refresh = Integer.parseInt(tok.nextToken());
+            retry = Integer.parseInt(tok.nextToken());
+            expire = Integer.parseInt(tok.nextToken());
+            minimum = TTLSpec.createFixed(Integer.parseInt(tok.nextToken()));
+        } catch (NoSuchElementException e) {
+            throw new IllegalArgumentException("Malformed record data string");
+        }
+    }
 
     /**
      * Construct a new instance.
@@ -100,25 +145,6 @@ public class SoaRecord extends Record {
      */
     public SoaRecord(final Domain name, final Domain mName, final Domain rName, final int serial, final int refresh, final int retry, final int expire, final TTLSpec minimum) {
         this(name, RRClass.IN, TTLSpec.ZERO, mName, rName, serial, refresh, retry, expire, minimum);
-    }
-
-    /**
-     * Construct a new instance.
-     *
-     * @param name the domain name
-     * @param rrClass the resource record class
-     * @param ttlSpec the TTL spec
-     * @param recordBuffer the buffer from which the record data should be built
-     */
-    public SoaRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final ByteBuffer recordBuffer) {
-        super(name, rrClass, RRType.SOA, ttlSpec);
-        mName = Domain.fromBytes(recordBuffer);
-        rName = Domain.fromBytes(recordBuffer);
-        serial = recordBuffer.getInt();
-        refresh = recordBuffer.getInt();
-        retry = recordBuffer.getInt();
-        expire = recordBuffer.getInt();
-        minimum = TTLSpec.createFixed(recordBuffer.getInt());
     }
 
     /**

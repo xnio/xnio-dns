@@ -28,6 +28,8 @@ import org.jboss.xnio.dns.RRClass;
 import org.jboss.xnio.dns.RRType;
 import org.jboss.xnio.dns.TTLSpec;
 import java.util.Arrays;
+import java.util.StringTokenizer;
+import java.util.ArrayList;
 import java.nio.ByteBuffer;
 
 public class WksRecord extends Record {
@@ -42,6 +44,41 @@ public class WksRecord extends Record {
 
     private final Protocol protocol;
     private final int[] ports;
+
+    /**
+     * Construct a new instance.
+     *
+     * @param name the domain name
+     * @param rrClass the resource record class
+     * @param ttlSpec the TTL spec
+     * @param recordString the string from which the record data should be built
+     */
+    public WksRecord(final Domain name, final RRClass rrClass, final TTLSpec ttlSpec, final String recordString) {
+        super(name, rrClass, RRType.WKS, ttlSpec);
+        final StringTokenizer tok = new StringTokenizer(recordString, " \t\n\r\f", false);
+        try {
+            final String proto = tok.nextToken();
+            protocol = Protocol.valueOf(proto);
+            final ArrayList<String> portStrings = new ArrayList<String>();
+            while (tok.hasMoreTokens()) {
+                portStrings.add(tok.nextToken());
+            }
+            final int[] ports = new int[portStrings.size()];
+            int i = 0;
+            for (String portString : portStrings) {
+                final int portNum = Integer.parseInt(portString, 10);
+                if (portNum < 0 || portNum > 65535) {
+                    throw new IllegalArgumentException("Invalid port number given");
+                }
+                ports[i++] = portNum;
+            }
+            this.ports = ports;
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            throw new IllegalArgumentException("Invalid data for WKS record", e);
+        }
+    }
 
     /**
      * Construct a new instance.
