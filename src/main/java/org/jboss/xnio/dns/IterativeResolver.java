@@ -55,18 +55,9 @@ public final class IterativeResolver extends AbstractResolver {
     }
 
     public IoFuture<Answer> resolve(final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
-        if (name.equals(Domain.ROOT)) {
-            // no root hints loaded...
-            return new FailedIoFuture<Answer>(new DNSException(ResultCode.SERVER_FAILURE, "No root hints loaded"));
-        }
-        if (flags.contains(ResolverFlag.NO_RECURSION)) {
+        if (name.equals(Domain.ROOT) || flags.contains(ResolverFlag.NO_RECURSION)) {
             return new FinishedIoFuture<Answer>(
-                    Answer.builder()
-                            .setQueryDomain(name)
-                            .setQueryRRClass(rrClass)
-                            .setQueryRRType(rrType)
-                            .setResultCode(ResultCode.NOERROR)
-                            .create()
+                    Answer.builder().setHeaderInfo(name, rrClass, rrType, ResultCode.NXDOMAIN).create()
             );
         }
         final FutureResult<Answer> futureResult = new FutureResult<Answer>(executor);

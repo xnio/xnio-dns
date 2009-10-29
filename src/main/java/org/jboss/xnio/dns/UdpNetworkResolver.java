@@ -37,6 +37,7 @@ import org.jboss.xnio.Pool;
 import org.jboss.xnio.Buffers;
 import org.jboss.xnio.IoUtils;
 import org.jboss.xnio.ChannelSource;
+import org.jboss.xnio.FutureResult;
 import org.jboss.xnio.log.Logger;
 import org.jboss.xnio.channels.UdpChannel;
 
@@ -80,17 +81,17 @@ public final class UdpNetworkResolver extends AbstractNetworkResolver {
 
         public IoFuture<Answer> resolve(final Domain name, final RRClass rrClass, final RRType rrType, final Set<ResolverFlag> flags) {
             final int id = random.nextInt() & 0xffff;
-            final IoFuture.Manager<Answer> manager = new IoFuture.Manager<Answer>(executor);
+            final FutureResult<Answer> manager = new FutureResult<Answer>(executor);
             final IoFuture<? extends UdpChannel> futureChannel = channelSource.open(new ChannelListener<UdpChannel>() {
                 public void handleEvent(final UdpChannel channel) {
                     channel.getCloseSetter().set(new ChannelListener<Channel>() {
                         public void handleEvent(final Channel channel) {
                             // cancel request if it isn't done
-                            manager.finishCancel();
+                            manager.setCancelled();
                         }
                     });
                     manager.addCancelHandler(IoUtils.closingCancellable(channel));
-                    channel.getReadSetter().set(new ReadListener(id, manager));
+                    channel.getReadSetter().set(new ReadListener(id, manager, name, rrClass, rrType));
                     channel.resumeReads();
                     final ByteBuffer buffer = bufferPool.allocate();
                     buffer.putShort((short) id);
@@ -117,9 +118,9 @@ public final class UdpNetworkResolver extends AbstractNetworkResolver {
                 }
             });
             manager.addCancelHandler(futureChannel);
-            futureChannel.addNotifier(new IoFuture.HandlingNotifier<Channel, IoFuture.Manager<Answer>>() {
-                public void handleCancelled(final IoFuture.Manager<Answer> attachment) {
-                    attachment.finishCancel();
+            futureChannel.addNotifier(new IoFuture.HandlingNotifier<Channel, FutureResult<Answer>>() {
+                public void handleCancelled(final FutureResult<Answer> attachment) {
+                    attachment.setCancelled();
                 }
             }, manager);
             return manager.getIoFuture();
@@ -129,11 +130,17 @@ public final class UdpNetworkResolver extends AbstractNetworkResolver {
     private class ReadListener implements ChannelListener<UdpChannel> {
 
         private final int id;
-        private final IoFuture.Manager<Answer> request;
+        private final Domain name;
+        private final RRClass rrClass;
+        private final RRType rrType;
+        private final FutureResult<Answer> request;
 
-        public ReadListener(final int id, final IoFuture.Manager<Answer> request) {
+        ReadListener(final int id, final FutureResult<Answer> request, final Domain name, final RRClass rrClass, final RRType rrType) {
             this.id = id;
             this.request = request;
+            this.name = name;
+            this.rrClass = rrClass;
+            this.rrType = rrType;
         }
 
         public void handleEvent(final UdpChannel channel) {
@@ -165,17 +172,15 @@ public final class UdpNetworkResolver extends AbstractNetworkResolver {
                     return;
                 }
                 final Answer.Builder builder = Answer.builder();
-                if (((flags & 1 << 5) != 0)) builder.addFlag(Answer.Flag.AUTHORATIVE);
                 if (((flags & 1 << 6) != 0)) {
-                    request.setException(new IOException("Answer was truncated"));
+                    // todo truncation request - handle via TCP some other time
+                    request.setResult(builder.setHeaderInfo(name, rrClass, rrType, ResultCode.FORMAT_ERROR).create());
                     IoUtils.safeClose(channel);
+                    return;
                 }
+                builder.setResultCode(ResultCode.fromInt(flags >> 12));
+                if (((flags & 1 << 5) != 0)) builder.addFlag(Answer.Flag.AUTHORATIVE);
                 if (((flags & 1 << 8) != 0)) builder.addFlag(Answer.Flag.RECURSION_AVAILABLE);
-                final ResultCode resultCode = ResultCode.fromInt(flags >> 12);
-                if (resultCode != ResultCode.NOERROR) {
-                    request.setException(new DNSException(resultCode));
-                    IoUtils.safeClose(channel);
-                }
                 final int qcnt = buffer.getShort() & 0xffff;
                 if (qcnt != 1) {
                     // ignore bogus reply
@@ -200,7 +205,7 @@ public final class UdpNetworkResolver extends AbstractNetworkResolver {
                 request.setResult(builder.create());
                 IoUtils.safeClose(channel);
             } catch (BufferUnderflowException e) {
-                request.setException(new IOException("Unable to parse DNS reply (buffer underflow)"));
+                request.setResult(Answer.builder().setHeaderInfo(name, rrClass, rrType, ResultCode.FORMAT_ERROR).create());
                 IoUtils.safeClose(channel);
             }
         }

@@ -126,6 +126,10 @@ public abstract class AbstractResolver implements Resolver {
         }
 
         protected List<String> convert(final Answer arg) throws IOException {
+            final ResultCode resultCode = arg.getResultCode();
+            if (resultCode != ResultCode.NOERROR) {
+                throw new DNSException(resultCode);
+            }
             final List<Record> answers = arg.getAnswerRecords();
             final List<String> strings = new ArrayList<String>(answers.size());
             for (Record answer : answers) {
@@ -144,6 +148,10 @@ public abstract class AbstractResolver implements Resolver {
         }
 
         protected Domain convert(final Answer arg) throws IOException {
+            final ResultCode resultCode = arg.getResultCode();
+            if (resultCode != ResultCode.NOERROR) {
+                throw new DNSException(resultCode);
+            }
             final List<Record> answers = arg.getAnswerRecords();
             for (Record answer : answers) {
                 if (answer instanceof PtrRecord) {
@@ -162,6 +170,10 @@ public abstract class AbstractResolver implements Resolver {
         }
 
         protected List<InetAddress> convert(final Answer arg) throws IOException {
+            final ResultCode resultCode = arg.getResultCode();
+            if (resultCode != ResultCode.NOERROR) {
+                throw new DNSException(resultCode);
+            }
             final List<Record> answers = arg.getAnswerRecords();
             final List<InetAddress> list = new ArrayList<InetAddress>(answers.size());
             for (Record record : answers) {
@@ -184,6 +196,10 @@ public abstract class AbstractResolver implements Resolver {
         }
 
         protected InetAddress convert(final Answer arg) throws IOException {
+            final ResultCode resultCode = arg.getResultCode();
+            if (resultCode != ResultCode.NOERROR) {
+                throw new DNSException(resultCode);
+            }
             final List<Record> answers = arg.getAnswerRecords();
             for (Record record : answers) {
                 if (record instanceof ARecord) {
@@ -205,6 +221,10 @@ public abstract class AbstractResolver implements Resolver {
         }
 
         protected List<Inet4Address> convert(final Answer arg) throws IOException {
+            final ResultCode resultCode = arg.getResultCode();
+            if (resultCode != ResultCode.NOERROR) {
+                throw new DNSException(resultCode);
+            }
             final List<Record> answers = arg.getAnswerRecords();
             List<Inet4Address> list = new ArrayList<Inet4Address>(answers.size());
             for (Record record : answers) {
@@ -224,6 +244,10 @@ public abstract class AbstractResolver implements Resolver {
         }
 
         protected Inet4Address convert(final Answer arg) throws IOException {
+            final ResultCode resultCode = arg.getResultCode();
+            if (resultCode != ResultCode.NOERROR) {
+                throw new DNSException(resultCode);
+            }
             final List<Record> answers = arg.getAnswerRecords();
             for (Record record : answers) {
                 if (record instanceof ARecord) {
@@ -242,6 +266,10 @@ public abstract class AbstractResolver implements Resolver {
         }
 
         protected List<Inet6Address> convert(final Answer arg) throws IOException {
+            final ResultCode resultCode = arg.getResultCode();
+            if (resultCode != ResultCode.NOERROR) {
+                throw new DNSException(resultCode);
+            }
             final List<Record> answers = arg.getAnswerRecords();
             List<Inet6Address> list = new ArrayList<Inet6Address>(answers.size());
             for (Record record : answers) {
@@ -261,6 +289,10 @@ public abstract class AbstractResolver implements Resolver {
         }
 
         protected Inet6Address convert(final Answer arg) throws IOException {
+            final ResultCode resultCode = arg.getResultCode();
+            if (resultCode != ResultCode.NOERROR) {
+                throw new DNSException(resultCode);
+            }
             final List<Record> answers = arg.getAnswerRecords();
             for (Record record : answers) {
                 if (record instanceof AaaaRecord) {

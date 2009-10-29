@@ -29,11 +29,10 @@ public enum ResultCode {
     NOERROR,
     FORMAT_ERROR,
     SERVER_FAILURE,
-    NAME_ERROR,
+    NXDOMAIN,
     NOT_IMPLEMENTED,
     REFUSED,
-    UNKNOWN,
-    ;
+    UNKNOWN;
 
     /**
      * Get the result code from its integer representation.  If the integer does not represent a known
@@ -47,7 +46,7 @@ public enum ResultCode {
             case 0: return NOERROR;
             case 1: return FORMAT_ERROR;
             case 2: return SERVER_FAILURE;
-            case 3: return NAME_ERROR;
+            case 3: return NXDOMAIN;
             case 4: return NOT_IMPLEMENTED;
             case 5: return REFUSED;
             default: return UNKNOWN;
